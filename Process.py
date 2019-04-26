@@ -314,7 +314,7 @@ class Process:
         Converts self._case_metrics into a dataframe and saves it.
         """
         df = pd.DataFrame(self._case_metrics, columns=['index', 'case_id',
-                                                       'gwd', 'twd'])
+                                                       'gdtrace', 'gdtime'])
         df.to_csv(f'{self._metrics_path}/{self._name}_case_metrics.csv',
                   index=False)
 
