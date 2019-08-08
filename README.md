@@ -1,4 +1,4 @@
 # CDESF
 Latest version of CDESF framework
 
-Please, used "Overlapping Analytic Stages in Online Process Mining" for reference.
+Please, use"Overlapping Analytic Stages in Online Process Mining" for reference.
