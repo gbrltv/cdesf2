@@ -7,10 +7,11 @@ class CDESF:
     Moreover, this class calls the methods for metrics retrieval.
     """
     def __init__(self, stream, th, gen_plot, plot_path,
-                 gen_metrics, metrics_path, denstream_kwargs):
+                 gen_metrics, metrics_path, name_proc, denstream_kwargs):
         """
         Initializes the attributes.
         """
+        self._name_proc = name_proc
         self._stream = stream
         self._th = th
         self._gen_plot = gen_plot
@@ -42,10 +43,11 @@ class CDESF:
         calls setProcess at each event and also controls the metrics recording.
         """
         for index, event in enumerate(self._stream):
-            name, case_id, act_name, act_timestamp = (event[3], event[0],
+            name, case_id, act_name, act_timestamp = (self._name_proc, event[0],
                                                       event[1], event[2])
             self.setProcess(name, case_id, act_name, act_timestamp, index)
-            
+
+
         if self._gen_metrics:
             for proc in self._processes:
                 self._processes[proc].clusterMetrics()

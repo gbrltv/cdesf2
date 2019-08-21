@@ -46,12 +46,12 @@ def createGraph(trace_list, time_list):
     for trace, time in zip(trace_list, time_list):
         for i in range(len(trace)-1):
             path = (trace[i], trace[i+1])
-            # r_path = tuple(reversed(path))
+            r_path = tuple(reversed(path))
             if path not in graph:
                 graph[path] = Transition(path)
-                # graph[r_path] = Transition(r_path)
+                graph[r_path] = Transition(r_path)
             graph[path].add(1, time[i])
-            # graph[r_path].add(1, time[i])
+            graph[r_path].add(1, time[i])
     return graph
 
 def computeFeatures(graph, trace, raw_time):

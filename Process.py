@@ -45,6 +45,8 @@ class Process:
         self._cluster_metrics = []
         self._case_metrics = []
         self._pmg_by_cp = []
+        self._initial_clusters = []
+        self._appeared_clusters = []
 
     def convertAct(self, act_name):
         """
@@ -230,8 +232,8 @@ class Process:
             index = self.getCase(case_id)
         # add activity
         self._cases[index].setActivity(act_name, act_timestamp)
-        act_conv = self.convertAct(act_name)
         # act_conv = act_name
+        act_conv = self.convertAct(act_name)
         self._cases[index]._trace.append(act_conv)
         self._cases[index]._timestamp.append(act_timestamp)
         # reorder list, putting the newest case in the first position
@@ -240,13 +242,13 @@ class Process:
         current_time = dt.strptime(self._cases[index].getLastTime(),
                                    '%Y/%m/%d %H:%M:%S.%f')
 
+
         if ((current_time - self._check_point).total_seconds() > self._th and
             not self._gpCreation):
             """
             Checks the first check point for CDESF initialization
             """
             self.initialiseCDESF(current_time)
-
         elif self._gpCreation:
             """
             If we are past the first check point, graph distances are calculated
@@ -275,7 +277,6 @@ class Process:
                 """
                 Check point
                 """
-                self._check_point = current_time
                 self._cp_count += 1
 
                 if len(self._cases) > self._nyquist:

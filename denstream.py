@@ -42,6 +42,7 @@ def plot_clusters(process_name, total_cases, event_index, cp, points, outliers,
     Plot all types of clusters, their respective graphs, and anomalous cases.
     Saves the plot according to the plot_path attribute.
     """
+
     plt.figure(figsize=(9, 7), dpi=400)
     ax = plt.subplot(212)
     plt.title(f'{process_name}, event index:{event_index}, total cases: {total_cases}, CP: {cp}')
@@ -266,7 +267,7 @@ class DenStream:
     Manages the DenStream algorithm and implements
     classes MicroCluster and Cluster.
     """
-    def __init__(self, n_features, lambda_, beta, epsilon, mu, stream_speed):
+    def __init__(self, n_features, lambda_, beta, epsilon, mu, stream_speed, ncluster):
         """
         Initializes the DenStream class.
         """
@@ -282,6 +283,7 @@ class DenStream:
         self._initiated = False
         self._all_cases = set()
         self._stream_speed = stream_speed
+        self._ncluster = ncluster
 
     @staticmethod
     def euclidean_distance(point1, point2):
@@ -343,26 +345,17 @@ class DenStream:
         if (closest_p_mc and
            closest_p_mc.radius_with_new_point(case.point) <= self._epsilon):
             closest_p_mc.update(case)
-            # decay all p_micro_clusters weights except for the cluster i
-            # self.decay_p_mc(i)
-            # self.decay_o_mc()
         else:
-            # decay all p_micro_clusters weights
-            # self.decay_p_mc()
             i, closest_o_mc, _ = self.find_closest_o_mc(case.point)
             # Try to merge point with closest o_mc
             if (closest_o_mc and
                closest_o_mc.radius_with_new_point(case.point) <= self._epsilon):
                 closest_o_mc.update(case)
-                # decay all o_micro_clusters weights except for the cluster i
-                self.decay_o_mc(i)
                 # Try to promote o_micro_clusters to p_mc
                 if closest_o_mc._weight > self._beta * self._mu:
                     del self._o_micro_clusters[i]
                     self._p_micro_clusters[self._label] = closest_o_mc
             else:
-                # decay all o_mc weights
-                self.decay_o_mc()
                 # create new o_mc containing the new point
                 new_o_mc = self.MicroCluster(n_features=self._n_features,
                                              creation_time=t,
@@ -372,12 +365,23 @@ class DenStream:
                 self._label += 1
                 self._o_micro_clusters[self._label] = new_o_mc
 
-        for i, cluster in chain(self._p_micro_clusters.items(), self._o_micro_clusters.items()):
+        for i, cluster in self._p_micro_clusters.items():
+            if cluster._count_to_decay == 0:
+                cluster.update(None)
+                cluster._count_to_decay = cluster._stream_speed
+                if cluster in self._p_micro_clusters and cluster._weight < self._beta * self._mu:
+                    del self._p_micro_clusters[i]
+                    self._o_micro_clusters[i] = cluster
+            else:
+                cluster._count_to_decay = cluster._count_to_decay - 1
+        for i, cluster in self._o_micro_clusters.items():
             if cluster._count_to_decay == 0:
                 cluster.update(None)
                 cluster._count_to_decay = cluster._stream_speed
             else:
                 cluster._count_to_decay = cluster._count_to_decay - 1
+
+
 
     def train(self, case):
         """
@@ -532,6 +536,7 @@ class DenStream:
                 dense_groups = [[]]
             if len(not_dense_groups) == 0:
                 not_dense_groups = [[]]
+
             return dense_groups, not_dense_groups
 
         # only one p_micro_cluster (check if it is dense enough)
