@@ -277,6 +277,7 @@ class Process:
                 """
                 Check point
                 """
+                self._check_point = current_time
                 self._cp_count += 1
 
                 if len(self._cases) > self._nyquist:
