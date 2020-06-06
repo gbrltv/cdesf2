@@ -1,4 +1,4 @@
-cdesf2
+CDESF: Concept-drift on Event Stream Framework
 =========================================================================================
 |travis| |sonar_quality| |sonar_maintainability| |codacy|
 |code_climate_maintainability| |pip| |downloads|
@@ -20,7 +20,8 @@ get slightly different results, here's three of them:
 
 |coveralls| |sonar_coverage| |code_climate_coverage|
 
-Latest version of CDESF framework
+Reference
+----------------------------------------------
 
 Please, use “Overlapping Analytic Stages in Online Process Mining”
 (https://ieeexplore.ieee.org/abstract/document/8813959) for reference.
