@@ -5,51 +5,8 @@ addons:
   sonarcloud:
     organization: "gbrltv"
     token:
-      secure: Usage: travis COMMAND ...
+	secure: "A6TneLJRVcaFhlgCzsES5m3gnL0Buza2PMDYQSUF5TFgaCJ38CrQejSLgBMug+xh/BfFQJzuSCZWTFvaa8f++vo1YUgRp5S5KpZwgnEvgaqFVyNgmJoRNA6Jqq4ehdG1/8kmD7pX0Aj1REniX8WGgGCGGbEadjIU0NDtxeRI4pJir4/Km9UKLTGJu0Vmm4VoZJ9FPQqLRElrj0sIhI5Lbmdq8qCoTLynEBeHW/2Nm/LbkDH+3QbeK4EFVSKwFQtFD9BeDntNEUn9s9RzWp2YCBSoa8Pq6/IfdgWxchicvWWcAw7rYw3VLHH/AAI06OObvfN/sovJNCSvKE3O+c3YkJpYvQ07yLmd1dWB2qpDgK616PJRpm6f6z4jwFSTMbYMVh/aEcPZ+YLcFi3+L+RDNlJuKN/ymyDkl5SCQqWvoFM0KfUtRyKv3lQFL8z+Apq6NNYKelgoFDM9pUqOxu6IAMfqipeYvnkov5pd1rD4yZzZVx2cNOTehMgz2z8aZE4gVXZntXsVxziFlpyMxrIHLhBvkCNqOoCW5rURhkIwd67imuoM5mxXDFSZrr/wVSHBEwTuzyVfdTuF6kjgXZVUBfQcT2xQPZ1afK3Un+rOCcekLEYEqjjmlCzWtbfJdMhugPFBvWFlTRuzhdMayuzKsNwKYpzb9ZI/ThPDfkLS6M0="
 
-Available commands:
-
-    non-API commands
-        help                   helps you out when in dire need of information
-        version                outputs the client version
-    API commands
-        accounts               displays accounts and their subscription status
-        console                interactive shell; requires `pry`
-        endpoint               displays or changes the API endpoint
-        lint                   display warnings for a .travis.yml
-        login                  authenticates against the API and stores the token
-        logout                 deletes the stored API token
-        monitor                live monitor for what's going on
-        raw                    makes an (authenticated) API call and prints out the result
-        report                 generates a report useful for filing issues
-        repos                  lists repositories the user has certain permissions on
-        sync                   triggers a new sync with GitHub
-        token                  outputs the secret API token
-        whatsup                lists most recent builds
-        whoami                 outputs the current user
-    Repo commands
-        branches               displays the most recent build for each branch
-        cache                  lists or deletes repository caches
-        cancel                 cancels a job or build
-        disable                disables a project
-        enable                 enables a project
-        encrypt                encrypts values for the .travis.yml
-        encrypt-file           encrypts a file and adds decryption steps to .travis.yml
-        env                    show or modify build environment variables
-        history                displays a project's build history
-        init                   generates a .travis.yml and enables the project
-        logs                   streams test logs
-        open                   opens a build or job in the browser
-        pubkey                 prints out a repository's public key
-        requests               lists recent requests
-        restart                restarts a build or job
-        settings               access repository settings
-        setup                  sets up an addon or deploy target
-        show                   displays a build or job
-        sshkey                 checks, updates or deletes an SSH key
-        status                 checks status of the latest build
-
-run `/usr/local/bin/travis help COMMAND` for more info
 language: python
 python:
 - '3.6'
