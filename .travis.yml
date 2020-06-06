@@ -1,0 +1,77 @@
+dist: trusty
+git:
+  depth: false
+addons:
+  sonarcloud:
+    organization: "gbrltv"
+    token:
+      secure: Usage: travis COMMAND ...
+
+Available commands:
+
+    non-API commands
+        help                   helps you out when in dire need of information
+        version                outputs the client version
+    API commands
+        accounts               displays accounts and their subscription status
+        console                interactive shell; requires `pry`
+        endpoint               displays or changes the API endpoint
+        lint                   display warnings for a .travis.yml
+        login                  authenticates against the API and stores the token
+        logout                 deletes the stored API token
+        monitor                live monitor for what's going on
+        raw                    makes an (authenticated) API call and prints out the result
+        report                 generates a report useful for filing issues
+        repos                  lists repositories the user has certain permissions on
+        sync                   triggers a new sync with GitHub
+        token                  outputs the secret API token
+        whatsup                lists most recent builds
+        whoami                 outputs the current user
+    Repo commands
+        branches               displays the most recent build for each branch
+        cache                  lists or deletes repository caches
+        cancel                 cancels a job or build
+        disable                disables a project
+        enable                 enables a project
+        encrypt                encrypts values for the .travis.yml
+        encrypt-file           encrypts a file and adds decryption steps to .travis.yml
+        env                    show or modify build environment variables
+        history                displays a project's build history
+        init                   generates a .travis.yml and enables the project
+        logs                   streams test logs
+        open                   opens a build or job in the browser
+        pubkey                 prints out a repository's public key
+        requests               lists recent requests
+        restart                restarts a build or job
+        settings               access repository settings
+        setup                  sets up an addon or deploy target
+        show                   displays a build or job
+        sshkey                 checks, updates or deletes an SSH key
+        status                 checks status of the latest build
+
+run `/usr/local/bin/travis help COMMAND` for more info
+language: python
+python:
+- '3.6'
+before_install:
+  - pip install --upgrade pytest
+install:
+- pip install .[test]
+before_script:
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
+script:
+- rm -rf .coverage
+- coverage erase
+- pytest --cov=cdesf2 --cov-report xml:coverage.xml 
+- coverage combine --append || true
+- coverage report
+- coverage xml
+- 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then sonar-scanner; fi' # sonar only on non-PRs
+
+after_success:
+  - coveralls
+  - python-codacy-coverage -r coverage.xml
