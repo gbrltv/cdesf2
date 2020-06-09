@@ -7,7 +7,7 @@ import matplotlib.patches as patches
 import matplotlib.image as mpimg
 import subprocess
 from math import log10, sqrt
-from Graph import createGraph, normGraph
+from data_structures.Graph import createGraph, normGraph
 from io import StringIO
 import shutil
 

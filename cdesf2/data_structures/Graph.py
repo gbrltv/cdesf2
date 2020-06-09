@@ -1,6 +1,6 @@
 from datetime import datetime as dt
 from math import log10
-from Transition import Transition
+from .Transition import Transition
 
 """
 Generates and maintains the graphs and calculates GDtrace (gwd) and GDtime (twd).

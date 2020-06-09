@@ -3,7 +3,7 @@ import re
 import time
 import psutil
 import pandas as pd
-from CDESF import CDESF
+from core.CDESF import CDESF
 
 """
 The main class sets the initial parameters of the framework which will be
@@ -20,7 +20,7 @@ an error and won't be consumed by the framework.
 """
 
 # hyperparameters configuration
-path = 'demo'
+path = '../demo'
 process = 'Detail_Supplier_IW-Frozen.csv'
 name = process.split('.')[0]
 th = 43200

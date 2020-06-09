@@ -1,6 +1,6 @@
 import numpy as np
-from Activity import Activity
-from denstream import Case as CasePoint
+from data_structures.Activity import Activity
+from clustering.denstream import Case as CasePoint
 
 class Case:
     """

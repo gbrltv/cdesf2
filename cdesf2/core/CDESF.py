@@ -1,4 +1,4 @@
-from Process import Process
+from .Process import Process
 
 class CDESF:
     """

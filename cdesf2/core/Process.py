@@ -1,11 +1,12 @@
-import Graph
+import data_structures.Graph as Graph
 import numpy as np
 import pandas as pd
-from Case import Case
+from data_structures import Case
 from datetime import datetime as dt
-from denstream import Case as CasePoint
-from denstream import DenStream, gen_data_plot, plot_clusters, cluster_metrics
-from collections import defaultdict, deque
+from clustering.denstream import Case as CasePoint
+from clustering.denstream import DenStream, gen_data_plot, plot_clusters, cluster_metrics
+
+from collections import deque
 
 
 class Process:
