@@ -1,6 +1,6 @@
 import numpy as np
-from Activity import Activity
-from denstream import Case as CasePoint
+from .Activity import Activity
+from cdesf2.clustering.denstream import Case as CasePoint
 
 class Case:
     """

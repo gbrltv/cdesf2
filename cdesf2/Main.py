@@ -3,7 +3,7 @@ import re
 import time
 import psutil
 import pandas as pd
-from CDESF import CDESF
+from cdesf2.core.CDESF import CDESF
 
 """
 The main class sets the initial parameters of the framework which will be
