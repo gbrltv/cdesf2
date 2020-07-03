@@ -6,5 +6,5 @@ class Activity:
         """
         Initializes an Activity setting its name and timestamp.
         """
-        self._name = name
-        self._timestamp = timestamp
+        self.name = name
+        self.timestamp = timestamp
