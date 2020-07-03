@@ -29,8 +29,9 @@ class TestCase:
 
     def test_set_activity(self, case):
         case.set_activity('activity1', 'timestamp1')
-        assert case.activities[0] == 'activity1'
-        assert case.activities[1] == 'timestamp1'
+        activity_obj = case.activities[0]
+        assert activity_obj.name == 'activity1'
+        assert activity_obj.timestamp == 'timestamp1'
 
     def test_get_last_time(self, case):
         case.timestamp.append('timestamp0')
