@@ -1,5 +1,7 @@
 import numpy as np
+import datetime as datetime
 from collections import namedtuple
+from typing import List
 from .activity import Activity
 
 
@@ -8,46 +10,73 @@ class Case:
     Represents a case and stores its attributes, such as activities,
     timestamps, GDtrace (gwd), GDtime (twd), among others.
     """
-    def __init__(self, case_id):
+    def __init__(self, case_id: str):
         """
         Receives a case identifier and initializes the attributes of a new case.
+
+        Parameters
+        --------------------------------------
+        case_id: str,
+            Case identifier
         """
         self.id = case_id
         self.activities = []
-        self.trace = []
-        self.timestamp = []
-        self.gwd = 0.0
-        self.twd = 0.0
-        point_structure = np.array([self.gwd, self.twd])
-        case_point = namedtuple('Case', ['id', 'point'])
-        self.point = case_point(id=self.id, point=point_structure)
+        self.graph_distance = np.nan
+        self.time_distance = np.nan
+        # point_structure = np.array([self.gwd, self.twd])
+        # case_point = namedtuple('Case', ['id', 'point'])
+        # self.point = case_point(id=self.id, point=point_structure)
 
-    def set_activity(self, act_name, act_timestamp):
+    def set_activity(self, activity_name: str, activity_timestamp: datetime):
         """
-        Creates a new Activity and appends it to self._activities.
+        Creates a new Activity and appends it to the case activities list.
+
+        Parameters
+        --------------------------------------
+        activity_name: str,
+            Name of the activity
+        activity_timestamp: datetime,
+            Time of activity conclusion
         """
-        activity = Activity(act_name, act_timestamp)
+        activity = Activity(activity_name, activity_timestamp)
         self.activities.append(activity)
 
-    def get_last_time(self):
+    def get_trace(self) -> List[str]:
         """
-        Retrieves the last event timestamp and is
-        used to sort cases before being deleted.
+        Returns
+        --------------------------------------
+        List of activity names
         """
-        return self.timestamp[-1]
+        return [activity.name for activity in self.activities]
 
-    def set_gwd(self, gwd):
+    def get_timestamps(self) -> List[datetime.datetime]:
         """
-        Receives a value corresponding to GDtrace and stores
-        it in both self._gwd and self._point attributes.
+        Returns
+        --------------------------------------
+        List of activity timestamps
         """
-        self.gwd = gwd
-        self.point.point[0] = gwd
+        return [activity.timestamp for activity in self.activities]
 
-    def set_twd(self, twd):
+    def get_last_time(self) -> datetime:
         """
-        Receives a value corresponding to GDtime and stores
-        it in both self._twd and self._point attributes.
+        Returns
+        --------------------------------------
+        Retrieves the last event timestamp
         """
-        self.twd = twd
-        self.point.point[1] = twd
+        return self.activities[-1].timestamp
+
+    # def set_gwd(self, gwd):
+    #     """
+    #     Receives a value corresponding to GDtrace and stores
+    #     it in both self._gwd and self._point attributes.
+    #     """
+    #     self.gwd = gwd
+    #     self.point.point[0] = gwd
+    #
+    # def set_twd(self, twd):
+    #     """
+    #     Receives a value corresponding to GDtime and stores
+    #     it in both self._twd and self._point attributes.
+    #     """
+    #     self.twd = twd
+    #     self.point.point[1] = twd
