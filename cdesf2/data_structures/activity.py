@@ -18,5 +18,5 @@ class Activity:
         Returns
         --------------------------------------
         """
-        self.name = name
+        self.name = name.replace(' ', '_')
         self.timestamp = timestamp
