@@ -3,7 +3,6 @@ import networkx as nx
 from typing import Tuple
 from ..data_structures import Case
 from .time_difference import time_difference
-from .graph_operation import normalize_graph
 
 
 def extract_case_distances(graph: nx.DiGraph, case: Case) -> Tuple[float, float]:
@@ -27,8 +26,6 @@ def extract_case_distances(graph: nx.DiGraph, case: Case) -> Tuple[float, float]
 
     if len(graph.edges) == 0 or len(trace) <= 1:
         return 0, 0
-
-    graph = normalize_graph(graph)
 
     # accumulates initial trace weight and graph times
     graph_time = []

@@ -1,7 +1,5 @@
 import numpy as np
-from math import sqrt
 from ..data_structures import Case
-from typing import Optional
 
 
 class MicroCluster:
@@ -9,10 +7,10 @@ class MicroCluster:
     The class represents a micro-cluster and its attributes.
     """
 
-    def __init__(self, n_features: int, creation_time: int, lambda_: float, stream_speed: int):
+    def __init__(self, id_: int, n_features: int, creation_time: int, lambda_: float):
         """
         Receives the number of feature analyzed, the creation time,
-        the importance of histarical data and the streem speed.
+        the importance of historical data and the stream speed.
         Initializes the MicroCluster attributes.
 
         Parameters
@@ -21,22 +19,19 @@ class MicroCluster:
             The number of features DenStream must consider,
             in our case is always set to 2, since we have
             two attributes (graph_distance and time_distance)
-        creation_time: int
+        time: int
             Creation time in single units
         lambda_: float
             Sets the importance of historical data for the
             current clusters
-        stream_speed: int
-            Speed of stream
         """
+        self.id = id_
         self.CF = np.zeros(n_features)
         self.CF2 = np.zeros(n_features)
         self.weight = 0
-        self.creation_time = creation_time
-        self.case_ids = set()
         self.lambda_ = lambda_
-        self.stream_speed = stream_speed
-        self.count_to_decay = self.stream_speed
+        self.factor = 2 ** (-self.lambda_)
+        self.creation_time = creation_time
 
     @property
     def centroid(self) -> float:
@@ -59,12 +54,8 @@ class MicroCluster:
         --------------------------------------
         The micro-cluster's radius
         """
-        a = np.sqrt(np.sum(np.square(self.CF2))) / self.weight
-        b = np.square(np.sqrt(np.sum(np.square(self.CF))) / self.weight)
-        s = a - b
-        if s < 0:
-            s = 0
-        return sqrt(s)
+        cf1_squared = (self.CF / self.weight) ** 2
+        return np.nan_to_num(np.nanmax(((self.CF2 / self.weight) - cf1_squared) ** (1 / 2)))
 
     def radius_with_new_point(self, point: np.ndarray) -> float:
         """
@@ -84,32 +75,27 @@ class MicroCluster:
         cf2 = self.CF2 + point * point
         weight = self.weight + 1
 
-        a = np.sqrt(np.sum(np.square(cf2))) / weight
-        b = np.square(np.sqrt(np.sum(np.square(cf1))) / weight)
-        s = a - b
-        if s < 0:
-            s = 0
-        return sqrt(s)
+        cf1_squared = (cf1 / weight) ** 2
+        return np.nan_to_num(np.nanmax(((cf2 / weight) - cf1_squared) ** (1 / 2)))
 
-    def update(self, case: Optional[Case]):
+    def update(self, case: Case):
         """
-        Updates the micro-cluster weights either
-        considering a new case or not.
+        Updates the micro-cluster given a new case
 
         Parameters
         --------------------------------------
-        case: Optional[Case]
+        case: Case
             A case object
         """
-        if case is None:
-            factor = 2 ** (-self.lambda_)
-            self.CF *= factor
-            self.CF2 *= factor
-            self.weight *= factor
-        else:
-            case_point = np.array([case.graph_distance,
-                                  case.time_distance])
-            self.CF += case_point
-            self.CF2 += case_point * case_point
-            self.weight += 1
-            self.case_ids.add(case.id)
+        point = case.point
+        self.CF += point
+        self.CF2 += point * point
+        self.weight += 1
+
+    def decay(self):
+        """
+        Decays a micro-cluster using the factor, which is based on lambda
+        """
+        self.CF *= self.factor
+        self.CF2 *= self.factor
+        self.weight *= self.factor

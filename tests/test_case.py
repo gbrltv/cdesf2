@@ -18,8 +18,6 @@ def test_initial_value():
     assert case.activities == []
     assert case.graph_distance is np.nan
     assert case.time_distance is np.nan
-    # assert case.point[0] == '1'
-    # assert np.all(case.point[1] == [0, 0])
 
 
 def test_no_value():
@@ -40,7 +38,7 @@ def test_set_activity():
     assert case.activities[1].name == 'activity_1'
 
 
-def test_get_last_time():
+def test_last_time():
     case = Case('3')
 
     case.set_activity('activity1', datetime(2015, 5, 10, 8, 30, 00))
@@ -48,7 +46,7 @@ def test_get_last_time():
     case.set_activity('activity3', datetime(2015, 5, 10, 9, 30, 00))
     case.set_activity('activity4', datetime(2015, 5, 10, 10, 00, 00))
 
-    assert case.get_last_time() == datetime(2015, 5, 10, 10, 00, 00)
+    assert case.last_time == datetime(2015, 5, 10, 10, 00, 00)
 
 
 def test_get_trace():

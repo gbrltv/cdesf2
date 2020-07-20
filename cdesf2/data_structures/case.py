@@ -8,7 +8,7 @@ from .activity import Activity
 class Case:
     """
     Represents a case and stores its attributes, such as activities,
-    timestamps, GDtrace (gwd), GDtime (twd), among others.
+    timestamps, graph_distance, time_distance, among others.
     """
     def __init__(self, case_id: str):
         """
@@ -26,6 +26,19 @@ class Case:
         # point_structure = np.array([self.gwd, self.twd])
         # case_point = namedtuple('Case', ['id', 'point'])
         # self.point = case_point(id=self.id, point=point_structure)
+
+    @property
+    def point(self):
+        return np.array([self.graph_distance, self.time_distance])
+
+    @property
+    def last_time(self) -> datetime:
+        """
+        Returns
+        --------------------------------------
+        Retrieves the last event timestamp
+        """
+        return self.activities[-1].timestamp
 
     def set_activity(self, activity_name: str, activity_timestamp: datetime):
         """
@@ -56,27 +69,3 @@ class Case:
         List of activity timestamps
         """
         return [activity.timestamp for activity in self.activities]
-
-    def get_last_time(self) -> datetime:
-        """
-        Returns
-        --------------------------------------
-        Retrieves the last event timestamp
-        """
-        return self.activities[-1].timestamp
-
-    # def set_gwd(self, gwd):
-    #     """
-    #     Receives a value corresponding to GDtrace and stores
-    #     it in both self._gwd and self._point attributes.
-    #     """
-    #     self.gwd = gwd
-    #     self.point.point[0] = gwd
-    #
-    # def set_twd(self, twd):
-    #     """
-    #     Receives a value corresponding to GDtime and stores
-    #     it in both self._twd and self._point attributes.
-    #     """
-    #     self.twd = twd
-    #     self.point.point[1] = twd

@@ -9,7 +9,7 @@ import pytest
 
 
 def test_initial_value():
-    micro_cluster = MicroCluster(2, 0, 0.15, 1000)
+    micro_cluster = MicroCluster(0, 2, 0, 0.15)
     assert type(micro_cluster.CF) is np.ndarray
     assert type(micro_cluster.CF2) is np.ndarray
     assert np.all(micro_cluster.CF == [0, 0])
@@ -19,8 +19,6 @@ def test_initial_value():
     assert micro_cluster.creation_time == 0
     assert type(micro_cluster.lambda_) is float
     assert micro_cluster.lambda_ == 0.15
-    assert type(micro_cluster.stream_speed) is int
-    assert micro_cluster.stream_speed == 1000
 
 
 def test_no_value():
@@ -29,7 +27,7 @@ def test_no_value():
 
 
 def test_centroid():
-    micro_cluster = MicroCluster(2, 0, 0.15, 1000)
+    micro_cluster = MicroCluster(0, 2, 0, 0.15)
     micro_cluster.weight = 1
     assert type(micro_cluster.centroid) is np.ndarray
     assert np.all(micro_cluster.centroid == 0)
@@ -40,12 +38,12 @@ def test_centroid():
 
 
 def test_radius():
-    micro_cluster = MicroCluster(2, 0, 0.15, 1000)
+    micro_cluster = MicroCluster(0, 2, 0, 0.15)
     micro_cluster.weight = 1
     micro_cluster.CF = np.array([0, 0])
     micro_cluster.CF2 = np.array([0, 1])
 
-    assert type(micro_cluster.radius) is float
+    assert type(micro_cluster.radius) is np.float64
     assert micro_cluster.radius == 1.0
 
     micro_cluster.CF = np.array([0, 0])
@@ -66,10 +64,10 @@ def test_radius():
 
 
 def test_radius_with_new_point():
-    micro_cluster = MicroCluster(2, 0, 0.15, 1000)
+    micro_cluster = MicroCluster(0, 2, 0, 0.15)
     point1 = np.array([0, 1])
     radius = micro_cluster.radius_with_new_point(point1)
-    assert type(radius) is float
+    assert type(radius) is np.float64
     assert radius == 0
 
     micro_cluster.CF = np.array([0, 0])
@@ -100,7 +98,7 @@ def test_radius_with_new_point():
 
 def test_update():
     case_list = []
-    micro_cluster = MicroCluster(2, 0, 0.15, 1000)
+    micro_cluster = MicroCluster(0, 2, 0, 0.15)
 
     case = Case('1')
     case.set_activity('activityA', datetime(2015, 5, 10, 8, 00, 00))
@@ -123,22 +121,38 @@ def test_update():
     case.set_activity('activityC', datetime(2015, 5, 10, 8, 13, 00))
     case.graph_distance, case.time_distance = extract_case_distances(graph, case)
 
-    CF = micro_cluster.CF
-    CF2 = micro_cluster.CF2
+    cf = micro_cluster.CF.copy()
+    cf2 = micro_cluster.CF2.copy()
     weight = micro_cluster.weight
-    case_point = np.array([case.graph_distance, case.time_distance])
     micro_cluster.update(case)
 
-    assert np.all(micro_cluster.CF == CF + case_point)
-    assert np.all(micro_cluster.CF2 == CF2 + case_point*case_point)
+    assert np.all(micro_cluster.CF == cf + case.point)
+    assert np.all(micro_cluster.CF2 == cf2 + case.point*case.point)
     assert micro_cluster.weight == weight + 1
-    assert micro_cluster.case_ids == {'3'}
 
-    micro_cluster = MicroCluster(2, 0, 0.15, 1000)
-    CF = micro_cluster.CF
-    CF2 = micro_cluster.CF2
+    case = case_list[0]
+    case.graph_distance, case.time_distance = extract_case_distances(graph, case)
+    cf = micro_cluster.CF.copy()
+    cf2 = micro_cluster.CF2.copy()
     weight = micro_cluster.weight
-    micro_cluster.update(None)
-    assert np.all(micro_cluster.CF == CF * (2**(-0.15)))
-    assert np.all(micro_cluster.CF2 == CF2 * (2**(-0.15)))
+    micro_cluster.update(case)
+
+    assert np.all(micro_cluster.CF == cf + case.point)
+    assert np.all(micro_cluster.CF2 == cf2 + case.point * case.point)
+    assert micro_cluster.weight == weight + 1
+
+
+def test_decay():
+    micro_cluster = MicroCluster(0, 2, 0, 0.15)
+    micro_cluster.weight = 1
+    micro_cluster.CF = np.array([0.5, 0.7])
+    micro_cluster.CF2 = np.array([0.0, 1.0])
+
+    cf = micro_cluster.CF.copy()
+    cf2 = micro_cluster.CF2.copy()
+    weight = micro_cluster.weight
+    micro_cluster.decay()
+
+    assert np.all(micro_cluster.CF == cf * (2**(-0.15)))
+    assert np.all(micro_cluster.CF2 == cf2 * (2**(-0.15)))
     assert micro_cluster.weight == weight * (2**(-0.15))

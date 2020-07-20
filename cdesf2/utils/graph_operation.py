@@ -4,6 +4,29 @@ from ..data_structures.case import Case
 from ..utils import time_difference, extract_cases_time_and_trace
 
 
+def normalize_graph(graph: nx.DiGraph) -> nx.DiGraph:
+    """
+    Time and weight normalization for each edge in the graph.
+    Time normalization is the mean time of an edge.
+    Trace normalization is based on the graph weights
+
+    Parameters
+    --------------------------------------
+    graph: nx.DiGraph,
+        Graph to be normalized
+    Returns
+    --------------------------------------
+    graph: nx.DiGraph,
+        Normalized graph
+    """
+    max_weight = max([attributes['weight'] for n1, n2, attributes in graph.edges(data=True)])
+    for node1, node2, data in graph.edges(data=True):
+        data['weight_normalized'] = data['weight'] / max_weight
+        data['time_normalized'] = data['time'] / data['weight']
+
+    return graph
+
+
 def initialize_graph(graph: nx.DiGraph, case_list: List[Case]) -> nx.DiGraph:
     """
     Initialize a graph based on the weights and time differences from a list of cases
@@ -32,29 +55,7 @@ def initialize_graph(graph: nx.DiGraph, case_list: List[Case]) -> nx.DiGraph:
                 graph[edges[0]][edges[1]]['weight'] += 1
                 graph[edges[0]][edges[1]]['time'] += time[i]
 
-    return graph
-
-
-def normalize_graph(graph: nx.DiGraph) -> nx.DiGraph:
-    """
-    Time and weight normalization for each edge in the graph.
-    Time normalization is the mean time of an edge.
-    Trace normalization is based on the graph weights
-    Parameters
-    --------------------------------------
-    graph: nx.DiGraph,
-        Graph to be normalized
-    Returns
-    --------------------------------------
-    graph: nx.DiGraph,
-        Normalized graph
-    """
-    max_weight = max([attributes['weight'] for n1, n2, attributes in graph.edges(data=True)])
-    for node1, node2, data in graph.edges(data=True):
-        data['weight_normalized'] = data['weight'] / max_weight
-        data['time_normalized'] = data['time'] / data['weight']
-
-    return graph
+    return normalize_graph(graph)
 
 
 def merge_graphs(process_model_graph: nx.DiGraph, check_point_graph: nx.DiGraph) -> nx.DiGraph:
@@ -86,4 +87,4 @@ def merge_graphs(process_model_graph: nx.DiGraph, check_point_graph: nx.DiGraph)
         else:
             process_model_graph.add_edge(*path, weight=data['weight'], time=data['time'])
 
-    return process_model_graph
+    return normalize_graph(process_model_graph)
