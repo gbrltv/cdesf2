@@ -35,7 +35,8 @@ test_deps =[
     "validate_version_code",
     "codacy-coverage",
     "networkx",
-    "scipy"
+    "scipy",
+    "pandas"
 ]
 
 extras = {
