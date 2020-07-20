@@ -59,10 +59,6 @@ Please, use “Overlapping Analytic Stages in Online Process Mining”
 .. |coveralls| image:: https://coveralls.io/repos/github/gbrltv/CDESF2/badge.svg?branch=master
     :target: https://coveralls.io/github/gbrltv/CDESF2?branch=master
     :alt: Coveralls Coverage
-    
-.. image:: https://coveralls.io/repos/github/gbrltv/CDESF2/badge.svg?branch=master
-:target: https://coveralls.io/github/gbrltv/CDESF2?branch=master
-
 
 .. |pip| image:: https://badge.fury.io/py/cdesf2.svg
     :target: https://badge.fury.io/py/cdesf2
