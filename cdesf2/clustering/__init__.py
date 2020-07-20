@@ -1,10 +1,7 @@
-from .denstream import Case
-from .denstream import DenStream, gen_data_plot, plot_clusters, cluster_metrics
+from .denstream import DenStream
+from .denstream import NoMicroClusterException
 
 __all__ = [
-    "Case",
     "DenStream",
-    "gen_data_plot",
-    "plot_clusters",
-    "cluster_metrics"
+    "NoMicroClusterException"
 ]

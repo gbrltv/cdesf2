@@ -1,10 +1,11 @@
-from .Transition import Transition
-from .Case import Case
-from .Graph import createGraph, normGraph
+from .activity import Activity
+from .case import Case
+from .cluster import Cluster
+from .micro_cluster import MicroCluster
 
 __all__ = [
-    "createGraph",
-    "normGraph",
-    "Transition",
-    "Case"
+    "Activity",
+    "Case",
+    "Cluster",
+    "MicroCluster"
 ]

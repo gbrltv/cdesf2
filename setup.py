@@ -33,7 +33,10 @@ test_deps =[
     "pytest-cov",
     "coveralls",
     "validate_version_code",
-    "codacy-coverage"
+    "codacy-coverage",
+    "networkx",
+    "scipy",
+    "pandas"
 ]
 
 extras = {
