@@ -3,7 +3,7 @@ CDESF: Concept-drift on Event Stream Framework
 |travis| |sonar_quality| |sonar_maintainability| |codacy|
 |code_climate_maintainability| |pip| |downloads|
 
-Latest version of CDESF framework
+Latest version of CDESF framework - (under construction)
 
 How do I install this package?
 ----------------------------------------------
