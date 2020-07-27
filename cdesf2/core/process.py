@@ -100,12 +100,7 @@ class Process:
         Releases older cases based on the Nyquist value.
         The result is stored in self.cases.
         """
-        cases_sorted = sorted(self.cases, key=lambda x: x.last_time, reverse=True)
-        self.cases = cases_sorted[:self.nyquist]
-
-        # cases_ids = sorted(self.cases.keys(), key=operator.attrgetter('last_time'), reverse=True)
-        # for case_id in cases_ids[self.nyquist:]:
-        #     del self.cases[case_id]
+        self.cases = self.cases[:self.nyquist]
 
     def initialize_cdesf(self) -> None:
         """
@@ -131,9 +126,26 @@ class Process:
         #     self.save_pmg_on_check_point()
         self.initialized = True
 
-    def set_case(self, case_id: str, act_name: str, act_timestamp: datetime):
+    def set_case(self, case_id: str, act_name: str, act_timestamp: datetime) -> int:
         """
-        TODO
+        Function that finds the case and if it already exists,
+        sets the activity with the name and the timestamp passed and
+        puts the case modified in the first position in the list of cases.
+        If it does not exist, it creates a new case and adds the activity.
+        It returns the index of the case modified/created
+
+        Parameters
+        --------------------------------------
+        case_id: str
+            The case identifier,
+        act_name: str
+            Activity's name,
+        act_timestamp: datetime
+            Activity timestamp
+        Returns
+        --------------------------------------
+        index: int
+            Index of the case modified/created
         """
         # check if case exists and creates one if it doesn't
         index = self.get_case(case_id)
@@ -144,13 +156,13 @@ class Process:
         # add activity
         self.cases[index].set_activity(act_name, act_timestamp)
         # reorder list, putting the newest case in the first position
-        self.cases.append(self.cases.pop(index))
+        self.cases.insert(0, self.cases.pop(index))
 
         return index
 
     def check_point_update(self):
         """
-        TODO
+        Updates the checkpoint
         """
         self.cp_count += 1
 
@@ -254,8 +266,8 @@ class Process:
         """
         if len(self.process_model_graph.edges) > 0:
             self.process_model_graph = normalize_graph(self.process_model_graph)
-            for n1, n2, data in self.process_model_graph.edges(data=True):
-                self.pmg_by_cp.append([self.cp_count, (n1, n2),
+            for node1, node2, data in self.process_model_graph.edges(data=True):
+                self.pmg_by_cp.append([self.cp_count, (node1, node2),
                                        data['weight'], data['time'],
                                        data['weight_normalized'], data['time_normalized']])
 

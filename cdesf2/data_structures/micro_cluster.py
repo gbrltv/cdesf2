@@ -34,7 +34,7 @@ class MicroCluster:
         self.creation_time = creation_time
 
     @property
-    def centroid(self) -> float:
+    def centroid(self) -> np.ndarray:
         """
         Computes the micro-cluster's centroid value,
         which is given by CF divided by weight.

@@ -10,14 +10,14 @@ import pytest
 
 def test_initial_value():
     micro_cluster = MicroCluster(0, 2, 0, 0.15)
-    assert type(micro_cluster.CF) is np.ndarray
-    assert type(micro_cluster.CF2) is np.ndarray
+    assert isinstance(micro_cluster.CF, np.ndarray)
+    assert isinstance(micro_cluster.CF2, np.ndarray)
     assert np.all(micro_cluster.CF == [0, 0])
     assert np.all(micro_cluster.CF2 == [0, 0])
     assert micro_cluster.weight == 0
-    assert type(micro_cluster.creation_time) is int
+    assert isinstance(micro_cluster.creation_time, int)
     assert micro_cluster.creation_time == 0
-    assert type(micro_cluster.lambda_) is float
+    assert isinstance(micro_cluster.lambda_, float)
     assert micro_cluster.lambda_ == 0.15
 
 
@@ -29,7 +29,7 @@ def test_no_value():
 def test_centroid():
     micro_cluster = MicroCluster(0, 2, 0, 0.15)
     micro_cluster.weight = 1
-    assert type(micro_cluster.centroid) is np.ndarray
+    assert isinstance(micro_cluster.centroid, np.ndarray)
     assert np.all(micro_cluster.centroid == 0)
     micro_cluster.CF = np.array([0, 1])
     assert np.all(micro_cluster.centroid == [0, 1])
@@ -43,7 +43,7 @@ def test_radius():
     micro_cluster.CF = np.array([0, 0])
     micro_cluster.CF2 = np.array([0, 1])
 
-    assert type(micro_cluster.radius) is np.float64
+    assert isinstance(micro_cluster.radius, np.float64)
     assert micro_cluster.radius == 1.0
 
     micro_cluster.CF = np.array([0, 0])
@@ -67,7 +67,7 @@ def test_radius_with_new_point():
     micro_cluster = MicroCluster(0, 2, 0, 0.15)
     point1 = np.array([0, 1])
     radius = micro_cluster.radius_with_new_point(point1)
-    assert type(radius) is np.float64
+    assert isinstance(radius, np.float64)
     assert radius == 0
 
     micro_cluster.CF = np.array([0, 0])

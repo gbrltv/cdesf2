@@ -367,5 +367,5 @@ class DenStream:
                         centroid=mc.centroid,
                         radius=mc.radius,
                         weight=mc.weight,
-                        case_ids=mc.case_ids)
-                for i, mc in self.o_micro_clusters]
+                        case_ids=[k for k, v in self.all_cases.items() if v == mc.id])
+                for i, mc in enumerate(self.o_micro_clusters)]
