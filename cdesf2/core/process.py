@@ -1,6 +1,8 @@
 from typing import Union
 from datetime import datetime
 import networkx as nx
+from os import makedirs
+import json
 import pandas as pd
 from ..utils import extract_case_distances, initialize_graph, normalize_graph, merge_graphs
 from ..data_structures import Case
@@ -66,7 +68,7 @@ class Process:
         self.denstream = DenStream(**denstream_kwargs)
         self.cluster_metrics = []
         self.case_metrics = []
-        self.pmg_by_cp = []
+        # self.pmg_by_cp = [] -- until now no more useful
         # don't think they will be useful, I haven't found them in any file of cdesf
         # self.initial_clusters = []
         # self.appeared_clusters = []
@@ -260,16 +262,17 @@ class Process:
 
     def save_pmg_on_check_point(self) -> None:
         """
-        Saves the Process Model Graph at all check points in the
-        self.pmg_by_cp attribute.
-        TODO: improve how graphs are stored
+        Saves the Process Model Graph at all check points
+        in a JSON file
         """
-        if len(self.process_model_graph.edges) > 0:
-            self.process_model_graph = normalize_graph(self.process_model_graph)
-            for node1, node2, data in self.process_model_graph.edges(data=True):
-                self.pmg_by_cp.append([self.cp_count, (node1, node2),
-                                       data['weight'], data['time'],
-                                       data['weight_normalized'], data['time_normalized']])
+        try:
+            makedirs('./visualization', exist_ok=True)
+            if len(self.process_model_graph.edges) > 0:
+                self.process_model_graph = normalize_graph(self.process_model_graph)
+                with open(f'./visualization/process_model_graph_{self.cp_count}.json', 'x') as file:
+                    file.write(json.dumps(nx.readwrite.json_graph.node_link_data(self.process_model_graph)))
+        except Exception as e:
+            print(e)
 
     # commented because part of visualization
     # def gen_plots(self):

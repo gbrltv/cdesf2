@@ -3,8 +3,10 @@ from cdesf2.clustering import DenStream
 from cdesf2.data_structures import Case
 from datetime import datetime
 from math import log10
+from os import makedirs, path, remove, rmdir
 import networkx as nx
 import numpy as np
+import json
 from cdesf2.utils import initialize_graph,\
     normalize_graph, extract_case_distances
 import pytest
@@ -90,7 +92,7 @@ class TestProcess:
 
         assert process.cluster_metrics == []
         assert process.case_metrics == []
-        assert process.pmg_by_cp == []
+        # assert process.pmg_by_cp == []
 
     def test_no_value(self):
         with pytest.raises(Exception):
@@ -557,22 +559,68 @@ class TestProcess:
     def test_save_pmg_on_check_point(self, process, cases_list):
         assert len(process.process_model_graph.edges) == 0
         process.save_pmg_on_check_point()
-        assert process.pmg_by_cp == []
+        assert process.cp_count == 0
+        assert path.exists('./visualization')
+        assert not path.isfile(f'./visualization/process_model_graph_{process.cp_count}.json')
 
         process.cases = cases_list
         process.process_model_graph = initialize_graph(nx.DiGraph(), process.cases)
-        pmg = process.process_model_graph
+        pmg = initialize_graph(nx.DiGraph(), process.cases)
         pmg = normalize_graph(pmg)
-
         process.initialize_case_metrics()
         process.save_pmg_on_check_point()
 
+        assert process.cp_count == 0
+        assert path.exists('./visualization')
+        assert path.isfile(f'./visualization/process_model_graph_{process.cp_count}.json')
+        invalid_cp_count = process.cp_count + 1
+        assert not path.isfile(f'./visualization/process_model_graph_{invalid_cp_count}.json')
+        with open(f'./visualization/process_model_graph_{process.cp_count}.json') as file:
+            data = json.load(file)
+
+        nodes = data['nodes']
+        edges = data['links']
+        activities_ids = [node['id'] for node in nodes]
+        assert len(edges) == len(pmg.edges)
+        assert activities_ids == list(pmg)
         i = 0
         for node1, node2, data in pmg.edges(data=True):
-            assert process.pmg_by_cp[i][0] == process.cp_count
-            assert process.pmg_by_cp[i][1] == (node1, node2)
-            assert process.pmg_by_cp[i][2] == data['weight']
-            assert process.pmg_by_cp[i][3] == data['time']
-            assert process.pmg_by_cp[i][4] == data['weight_normalized']
-            assert process.pmg_by_cp[i][5] == data['time_normalized']
+            edge = edges[i]
+            edge_nodes = (edge['source'], edge['target'])
+            assert edge_nodes == (node1, node2)
+            assert edge['weight'] == data['weight']
+            assert edge['time'] == data['time']
+            assert edge['weight_normalized'] == data['weight_normalized']
+            assert edge['time_normalized'] == data['time_normalized']
             i += 1
+
+        remove(f'./visualization/process_model_graph_{process.cp_count}.json')
+
+        process.cp_count = 1
+        assert not path.isfile(f'./visualization/process_model_graph_{process.cp_count}.json')
+
+        pmg = normalize_graph(pmg)
+        process.save_pmg_on_check_point()
+
+        assert path.isfile(f'./visualization/process_model_graph_{process.cp_count}.json')
+        with open(f'./visualization/process_model_graph_{process.cp_count}.json') as file:
+            data = json.load(file)
+
+        nodes = data['nodes']
+        edges = data['links']
+        activities_ids = [d['id'] for d in nodes]
+        assert len(edges) == len(pmg.edges)
+        assert activities_ids == list(pmg)
+        i = 0
+        for node1, node2, data in pmg.edges(data=True):
+            edge = edges[i]
+            edge_nodes = (edge['source'], edge['target'])
+            assert edge_nodes == (node1, node2)
+            assert edge['weight'] == data['weight']
+            assert edge['time'] == data['time']
+            assert edge['weight_normalized'] == data['weight_normalized']
+            assert edge['time_normalized'] == data['time_normalized']
+            i += 1
+
+        remove(f'./visualization/process_model_graph_{process.cp_count}.json')
+        rmdir('./visualization')
