@@ -3,7 +3,7 @@ from cdesf2.data_structures import MicroCluster
 from cdesf2.data_structures import Cluster
 from cdesf2.data_structures import Case
 from cdesf2.utils import extract_case_distances, initialize_graph
-from math import ceil
+from math import log10
 import networkx as nx
 from datetime import datetime
 import numpy as np
@@ -238,85 +238,279 @@ class TestDenstream:
         assert new_p_mc.creation_time == 0
         assert new_p_mc.lambda_ == 0.15
 
-    def test_train(self, cases_list):
-        anomalous_denstream = DenStream(2, 0.15, 0.3, 0.1, 4, 1000)
-        case_1 = cases_list[0]
-        anomalous_denstream.train(case_1)
-        assert anomalous_denstream.all_cases == {'1': 0}
-        assert anomalous_denstream.time == 0
-        assert anomalous_denstream.no_processed_points == 1
-        assert anomalous_denstream.p_micro_clusters == []
-        assert not anomalous_denstream.o_micro_clusters == []
-        assert anomalous_denstream.o_micro_clusters[0].id == 0
-        assert np.isnan(sum(anomalous_denstream.o_micro_clusters[0].CF))
-        assert np.isnan(sum(anomalous_denstream.o_micro_clusters[0].CF))
-        assert anomalous_denstream.o_micro_clusters[0].weight == 1
-        assert anomalous_denstream.o_micro_clusters[0].lambda_ == 0.15
-        assert anomalous_denstream.o_micro_clusters[0].creation_time == 0
+    def test_train(self, denstream):
+        #anomalous_denstream = DenStream(2, 0.15, 0.3, 0.1, 4, 1000)
 
-        denstream = DenStream(2, 0.15, 0.3, 0.1, 4, 1000)
-        graph = nx.DiGraph()
-        graph = initialize_graph(graph, cases_list)
+        cases_list = []
+
+        case = Case('5')
+        case.set_activity('activityC', datetime(2015, 5, 10, 8, 00, 20))
+        case.set_activity('activityD', datetime(2015, 5, 10, 8, 00, 30))
+        case.set_activity('activityE', datetime(2015, 5, 10, 8, 00, 40))
+        cases_list.append(case)
+
+        case = Case('3')
+        case.set_activity('activityA', datetime(2015, 5, 10, 8, 00, 00))
+        case.set_activity('activityB', datetime(2015, 5, 10, 8, 00, 10))
+        case.set_activity('activityC', datetime(2015, 5, 10, 8, 00, 20))
+        case.set_activity('activityD', datetime(2015, 5, 10, 8, 00, 30))
+        cases_list.append(case)
+
+        case = Case('1')
+        case.set_activity('activityA', datetime(2015, 5, 10, 8, 00, 00))
+        case.set_activity('activityB', datetime(2015, 5, 10, 8, 00, 10))
+        case.set_activity('activityC', datetime(2015, 5, 10, 8, 00, 20))
+        cases_list.append(case)
+
+        case = Case('4')
+        case.set_activity('activityA', datetime(2015, 5, 10, 8, 00, 00))
+        case.set_activity('activityB', datetime(2015, 5, 10, 8, 00, 10))
+        case.set_activity('activityC', datetime(2015, 5, 10, 8, 00, 20))
+        cases_list.append(case)
+
+        case = Case('2')
+        case.set_activity('activityA', datetime(2015, 5, 10, 8, 00, 00))
+        case.set_activity('activityB', datetime(2015, 5, 10, 8, 00, 10))
+        cases_list.append(case)
+
+        pmg = initialize_graph(nx.DiGraph(), cases_list)
         for case in cases_list:
-            trace_distance, time_distance = extract_case_distances(graph, case)
-            case.graph_distance = trace_distance
+            graph_distance, time_distance = extract_case_distances(pmg, case)
+            case.graph_distance = graph_distance
             case.time_distance = time_distance
 
         denstream.dbscan(cases_list)
 
+        assert denstream.stream_speed == 1000
+        assert denstream.no_processed_points == 0
+        assert denstream.time == 0
         assert len(denstream.p_micro_clusters) == 1
         assert len(denstream.o_micro_clusters) == 0
-        assert denstream.all_cases == {'1': 0, '4': 0}
+
+        case_5 = cases_list[0]
+        denstream.train(case_5)
+        assert denstream.all_cases == {'1': 0, '4': 0, '5': 1}
+        assert denstream.time == 0
+        assert denstream.no_processed_points == 1
+        assert not denstream.p_micro_clusters == []
+        assert not denstream.o_micro_clusters == []
+        assert len(denstream.p_micro_clusters) == 1
+        assert len(denstream.o_micro_clusters) == 1
+
         assert denstream.p_micro_clusters[0].id == 0
         assert np.all(denstream.p_micro_clusters[0].CF == [0.25, 0])
         assert np.all(denstream.p_micro_clusters[0].CF2 == [0.03125, 0])
         assert denstream.p_micro_clusters[0].weight == 2
+        assert denstream.p_micro_clusters[0].creation_time == 0
 
-        denstream.train(cases_list[2])
-        assert denstream.all_cases
-        assert denstream.all_cases['3'] == 0
-        assert len(denstream.o_micro_clusters) == 0
+        assert denstream.o_micro_clusters[0].id == 1
+        assert np.all(denstream.o_micro_clusters[0].CF == [(5/8), 0])
+        assert np.all(denstream.o_micro_clusters[0].CF2 == [(5/8)**2, 0])
+        assert denstream.o_micro_clusters[0].weight == 1
+        assert denstream.o_micro_clusters[0].creation_time == 0
+
+        case_3 = cases_list[1]
+        denstream.train(case_3)
+        assert denstream.all_cases == {'1': 0, '3': 0, '4': 0, '5': 1}
+        assert denstream.time == 0
+        assert denstream.no_processed_points == 2
         assert len(denstream.p_micro_clusters) == 1
-        assert np.all(denstream.p_micro_clusters[0].CF == [(0.25 + (1 / 3)), 0])
-        assert np.all(denstream.p_micro_clusters[0].CF2 == [0.03125 + (1 / 3) * (1 / 3), 0])
+        assert len(denstream.o_micro_clusters) == 1
+
+        assert denstream.p_micro_clusters[0].id == 0
+        assert np.all(denstream.p_micro_clusters[0].CF == [0.5, 0])
+        assert np.all(denstream.p_micro_clusters[0].CF2 == [0.09375, 0])
         assert denstream.p_micro_clusters[0].weight == 3
-        assert denstream.no_processed_points == 1
+        assert denstream.p_micro_clusters[0].creation_time == 0
 
-        # self.no_processed_points % self.stream_speed == 0
-        denstream = DenStream(2, 0.15, 0.3, 0.1, 4, 1000)
-        graph = nx.DiGraph()
-        graph = initialize_graph(graph, cases_list)
-        for case in cases_list:
-            trace_distance, time_distance = extract_case_distances(graph, case)
-            case.graph_distance = trace_distance
-            case.time_distance = time_distance
+        assert denstream.o_micro_clusters[0].id == 1
+        assert np.all(denstream.o_micro_clusters[0].CF == [(5/8), 0])
+        assert np.all(denstream.o_micro_clusters[0].CF2 == [(5/8)**2, 0])
+        assert denstream.o_micro_clusters[0].weight == 1
+        assert denstream.o_micro_clusters[0].creation_time == 0
 
-        denstream.dbscan(cases_list)
-
+        case_1 = cases_list[2]
+        denstream.train(case_1)
+        assert denstream.all_cases == {'1': 0, '3': 0, '4': 0, '5': 1}
+        assert denstream.time == 0
+        assert denstream.no_processed_points == 3
+        assert len(denstream.o_micro_clusters) == 1
         assert len(denstream.p_micro_clusters) == 1
-        assert len(denstream.o_micro_clusters) == 0
-        assert denstream.all_cases == {'1': 0, '4': 0}
+
         assert denstream.p_micro_clusters[0].id == 0
-        assert np.all(denstream.p_micro_clusters[0].CF == [0.25, 0])
-        assert np.all(denstream.p_micro_clusters[0].CF2 == [0.03125, 0])
-        assert denstream.p_micro_clusters[0].weight == 2
+        assert np.all(denstream.p_micro_clusters[0].CF == [(5/8), 0])
+        assert np.all(denstream.p_micro_clusters[0].CF2 == [(7/64), 0])
+        assert denstream.p_micro_clusters[0].weight == 4
 
-        denstream.stream_speed = 1
-        denstream.train(cases_list[2])
-        assert denstream.all_cases
-        assert denstream.all_cases['3'] == 0
-        assert len(denstream.o_micro_clusters) == 0
+        assert denstream.o_micro_clusters[0].id == 1
+        assert np.all(denstream.o_micro_clusters[0].CF == [(5/8), 0])
+        assert np.all(denstream.o_micro_clusters[0].CF2 == [(5/8)**2, 0])
+        assert denstream.o_micro_clusters[0].weight == 1
+        assert denstream.o_micro_clusters[0].creation_time == 0
+
+        case_4 = cases_list[3]
+        denstream.train(case_4)
+        assert denstream.all_cases == {'1': 0, '3': 0, '4': 0, '5': 1}
+        assert denstream.time == 0
+        assert denstream.no_processed_points == 4
+        assert len(denstream.o_micro_clusters) == 1
         assert len(denstream.p_micro_clusters) == 1
-        # assert np.all(denstream.p_micro_clusters[0].CF == [(0.25 * (2 ** (-0.15))), 0])
-        # assert np.all(denstream.p_micro_clusters[0].CF2 == [0.03125 * (2 ** (-0.15)), 0])
 
-        # mc.weight > self.beta * self.mu
-        assert denstream.p_micro_clusters[0].weight == 3 * (2 ** (-0.15))
-        assert denstream.no_processed_points == 1
-        # assert denstream.tp == 18 ... true???
-        # assert ceil(0.3877443751) == 1
-        # assert denstream.tp == ceil(0.3877443751)
-        assert denstream.time == 1
+        assert denstream.p_micro_clusters[0].id == 0
+        assert np.all(denstream.p_micro_clusters[0].CF == [0.75, 0])
+        assert np.all(denstream.p_micro_clusters[0].CF2 == [0.125, 0])
+        assert denstream.p_micro_clusters[0].weight == 5
+
+        assert denstream.o_micro_clusters[0].id == 1
+        assert np.all(denstream.o_micro_clusters[0].CF == [(5/8), 0])
+        assert np.all(denstream.o_micro_clusters[0].CF2 == [(5/8)**2, 0])
+        assert denstream.o_micro_clusters[0].weight == 1
+        assert denstream.o_micro_clusters[0].creation_time == 0
+
+        case_1 = cases_list[4]
+        denstream.train(case_1)
+        assert denstream.all_cases == {'1': 0, '2': 0, '3': 0, '4': 0, '5': 1}
+        assert denstream.time == 0
+        assert denstream.no_processed_points == 5
+        assert len(denstream.o_micro_clusters) == 1
+        assert len(denstream.p_micro_clusters) == 1
+
+        assert denstream.p_micro_clusters[0].id == 0
+        assert np.all(denstream.p_micro_clusters[0].CF == [0.75, 0])
+        assert np.all(denstream.p_micro_clusters[0].CF2 == [0.125, 0])
+        assert denstream.p_micro_clusters[0].weight == 6
+
+        assert denstream.o_micro_clusters[0].id == 1
+        assert np.all(denstream.o_micro_clusters[0].CF == [(5/8), 0])
+        assert np.all(denstream.o_micro_clusters[0].CF2 == [(5/8)**2, 0])
+        assert denstream.o_micro_clusters[0].weight == 1
+        assert denstream.o_micro_clusters[0].creation_time == 0
+
+        case = Case('6')
+        case.set_activity('activityE', datetime(2015, 5, 10, 8, 00, 40))
+        case.set_activity('activityF', datetime(2015, 5, 10, 8, 00, 50))
+
+        graph_distance, time_distance = extract_case_distances(pmg, case)
+        case.graph_distance = graph_distance
+        case.time_distance = time_distance
+        cases_list.insert(0, case)
+
+        denstream.train(cases_list[0])
+        assert denstream.all_cases == {'1': 0, '2': 0, '3': 0, '4': 0, '5': 1, '6': 2}
+        assert denstream.time == 0
+        assert denstream.no_processed_points == 6
+        assert len(denstream.o_micro_clusters) == 2
+        assert len(denstream.p_micro_clusters) == 1
+
+        assert denstream.p_micro_clusters[0].id == 0
+        assert np.all(denstream.p_micro_clusters[0].CF == [0.75, 0])
+        assert np.all(denstream.p_micro_clusters[0].CF2 == [0.125, 0])
+        assert denstream.p_micro_clusters[0].weight == 6
+
+        assert denstream.o_micro_clusters[0].id == 1
+        assert np.all(denstream.o_micro_clusters[0].CF == [(5/8), 0])
+        assert np.all(denstream.o_micro_clusters[0].CF2 == [(5/8)**2, 0])
+        assert denstream.o_micro_clusters[0].weight == 1
+        assert denstream.o_micro_clusters[0].creation_time == 0
+
+        assert denstream.o_micro_clusters[1].id == 2
+        assert np.all(denstream.o_micro_clusters[1].CF == [1, 1])
+        assert np.all(denstream.o_micro_clusters[1].CF2 == [1, 1])
+        assert denstream.o_micro_clusters[1].weight == 1
+        assert denstream.o_micro_clusters[1].creation_time == 0
+
+
+        assert denstream.all_cases == {'1': 0, '2': 0, '3': 0, '4': 0, '5': 1, '6': 2}
+        denstream.stream_speed = 7
+        denstream.train(cases_list[0])
+        assert len(denstream.o_micro_clusters) == 1
+        assert len(denstream.p_micro_clusters) == 2
+
+        CF = np.array([0.75, 0]) * (2 ** (-0.15))
+        CF2 = np.array([0.125, 0]) * (2 ** (-0.15))
+        weight = 6 * (2 ** (-0.15))
+
+        assert denstream.p_micro_clusters[0].id == 0
+        assert np.all(denstream.p_micro_clusters[0].CF == CF)
+        assert np.all(denstream.p_micro_clusters[0].CF2 == CF2)
+        assert denstream.p_micro_clusters[0].weight == weight
+
+        CF = (np.array([1, 1]) + cases_list[0].point) * (2 ** (-0.15))
+        CF2 = (np.array([1, 1]) + (cases_list[0].point * cases_list[0].point)) * (2 ** (-0.15))
+        weight = (1 + 1) * (2 ** (-0.15))
+
+        assert denstream.p_micro_clusters[1].id == 2
+        assert np.all(denstream.p_micro_clusters[1].CF == CF)
+        assert np.all(denstream.p_micro_clusters[1].CF2 == CF2)
+        assert denstream.p_micro_clusters[1].weight == weight
+
+        for i in range(16):
+            assert denstream.all_cases == {'1': 0, '2': 0, '3': 0, '4': 0, '5': 1, '6': 2}
+            denstream.stream_speed = 8 + i
+            # mc.weight > self.beta * self.mu
+            denstream.train(cases_list[0])
+            assert denstream.time == i+2
+            assert denstream.p_micro_clusters[0].id == 0
+            CF = np.array([0.75, 0]) * (2 ** (-0.15))
+            CF2 = np.array([0.125, 0]) * (2 ** (-0.15))
+            weight = 6 * (2 ** (-0.15))
+            for x in range(i+1):
+                CF *= (2 ** (-0.15))
+                CF2 *= (2 ** (-0.15))
+                weight *= (2 ** (-0.15))
+            assert np.all(denstream.p_micro_clusters[0].CF == CF)
+            assert np.all(denstream.p_micro_clusters[0].CF2 == CF2)
+            assert denstream.p_micro_clusters[0].weight == weight
+
+            assert denstream.p_micro_clusters[1].id == 2
+            CF_1 = (np.array([1, 1]) + cases_list[0].point) * (2 ** (-0.15))
+            CF2_1 = (np.array([1, 1]) + (cases_list[0].point * cases_list[0].point)) * (2 ** (-0.15))
+            weight_1 = (1 + 1) * (2 ** (-0.15))
+            for x in range(i+1):
+                CF_1 += cases_list[0].point
+                CF_1 *= (2 ** (-0.15))
+                CF2_1 += cases_list[0].point * cases_list[0].point
+                CF2_1 *= (2 ** (-0.15))
+                weight_1 += 1
+                weight_1 *= (2 ** (-0.15))
+            assert np.all(denstream.p_micro_clusters[1].CF == CF_1)
+            assert np.all(denstream.p_micro_clusters[1].CF2 == CF2_1)
+            assert denstream.p_micro_clusters[1].weight == weight_1
+
+        assert len(denstream.o_micro_clusters) == 1
+        assert len(denstream.p_micro_clusters) == 2
+
+        assert denstream.time == 17
+        assert denstream.no_processed_points == 23
+        assert denstream.stream_speed == 23
+        denstream.stream_speed += 1
+
+        case = Case('7')
+        case.set_activity('activityA', datetime(2015, 5, 10, 8, 00, 00))
+        case.set_activity('activityG', datetime(2015, 5, 10, 8, 1, 00))
+        graph_distance, time_distance = extract_case_distances(pmg, case)
+        case.graph_distance = graph_distance
+        case.time_distance = time_distance
+        cases_list.insert(0, case)
+        assert cases_list[0].id == '7'
+
+        denstream.train(cases_list[0])
+        assert denstream.all_cases == {'1': 0, '2': 0, '3': 0, '4': 0, '5': 1, '6': 2, '7': 3}
+        CF_1 *= (2 ** (-0.15))
+        CF2_1 *= (2 ** (-0.15))
+        weight_1 *= (2 ** (-0.15))
+        assert len(denstream.o_micro_clusters) == 1
+        assert len(denstream.p_micro_clusters) == 1
+
+        assert denstream.p_micro_clusters[0].id == 2
+        assert np.all(denstream.p_micro_clusters[0].CF == CF_1)
+        assert np.all(denstream.p_micro_clusters[0].CF2 == CF2_1)
+        assert denstream.p_micro_clusters[0].weight == weight_1
+
+        assert denstream.o_micro_clusters[0].id == 3
+        assert np.all(denstream.o_micro_clusters[0].CF == [1, log10(60)])
+        assert np.all(denstream.o_micro_clusters[0].CF2 == [1, log10(60)**2])
+        assert denstream.o_micro_clusters[0].weight == 1
 
     def test_generate_clusters(self, denstream):
         assert len(denstream.p_micro_clusters) == 0
