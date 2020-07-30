@@ -10,8 +10,6 @@ def test_initial_value():
     assert isinstance(activity, Activity)
     assert activity.name == 'activity1'
     assert activity.timestamp == datetime(2015, 5, 10, 8, 22, 53)
-    activity = Activity('activity 1', datetime.strptime('2015/05/10 08:22:53.000', '%Y/%m/%d %H:%M:%S.%f'))
-    assert activity.name == 'activity_1'
 
 
 def test_no_value():
