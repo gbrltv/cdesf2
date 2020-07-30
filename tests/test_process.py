@@ -26,7 +26,8 @@ class TestProcess:
     @pytest.fixture
     def process(self, denstream_kwargs):
         process = Process('test', datetime(2015, 5, 10, 8, 22, 53),
-                          43200, False, 'plot_path', False, 'metric_path', denstream_kwargs)
+                          43200, False, 'plot_path', False, 'metric_path',
+                          './visualization', denstream_kwargs)
         return process
 
     @pytest.fixture
@@ -455,7 +456,8 @@ class TestProcess:
     def test_process_event(self, denstream_kwargs):
 
         strange_process = Process('test', datetime(2015, 5, 10, 8, 22, 53),
-                                  43200, False, 'plot_path', False, 'metric_path', denstream_kwargs)
+                                  43200, False, 'plot_path', False,
+                                  'metric_path', 'path_to_json', denstream_kwargs)
 
         assert strange_process.event_count == 0
         assert strange_process.cases == []
@@ -479,7 +481,8 @@ class TestProcess:
         assert not strange_process.initialized
 
         process = Process('test', datetime(2015, 5, 10, 8, 22, 53),
-                          43200, False, 'plot_path', False, 'metric_path', denstream_kwargs)
+                          43200, False, 'plot_path', False,
+                          'metric_path', 'path_to_json', denstream_kwargs)
 
         # (current_time - self.check_point).total_seconds() > self.time_horizon and not self.initialized
         process.process_event('1', 'activityA', datetime(2015, 5, 10, 21, 00, 00), 0)
@@ -557,6 +560,8 @@ class TestProcess:
         assert case_metrics[3] == 1.75
 
     def test_save_pmg_on_check_point(self, process, cases_list):
+        assert process.path_to_json == './visualization'
+
         assert len(process.process_model_graph.edges) == 0
         process.save_pmg_on_check_point()
         assert process.cp_count == 0

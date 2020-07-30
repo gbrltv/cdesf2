@@ -18,7 +18,7 @@ class Process:
     """
 
     def __init__(self, name: str, timestamp: datetime, time_horizon: int, gen_plot: bool, plot_path: str,
-                 gen_metrics: bool, metrics_path: str, denstream_kwargs: dict):
+                 gen_metrics: bool, metrics_path: str, path_to_json: str, denstream_kwargs: dict):
         """
         This function sets up a new process, defining its name,
         and preparing initial attributes.
@@ -53,6 +53,7 @@ class Process:
         self.plot_path = plot_path
         self.gen_metrics = gen_metrics
         self.metrics_path = metrics_path
+        self.path_to_json = path_to_json
         self.event_count = 0
         self.total_cases = set()
         self.cases = []
@@ -266,10 +267,10 @@ class Process:
         in a JSON file
         """
         try:
-            makedirs('./visualization', exist_ok=True)
+            makedirs(self.path_to_json, exist_ok=True)
             if len(self.process_model_graph.edges) > 0:
                 self.process_model_graph = normalize_graph(self.process_model_graph)
-                with open(f'./visualization/process_model_graph_{self.cp_count}.json', 'x') as file:
+                with open(f'{self.path_to_json}/process_model_graph_{self.cp_count}.json', 'x') as file:
                     file.write(json.dumps(nx.readwrite.json_graph.node_link_data(self.process_model_graph)))
         except Exception as e:
             print(e)
