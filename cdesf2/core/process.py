@@ -4,7 +4,7 @@ import networkx as nx
 from os import makedirs
 import json
 import pandas as pd
-from ..utils import extract_case_distances, initialize_graph, normalize_graph, merge_graphs
+from ..utils import extract_case_distances, initialize_graph, normalize_graph, merge_graphs, reading_csv
 from ..data_structures import Case
 from ..clustering import DenStream
 # from visualization import gen_data_plot, plot_clusters, cluster_metrics
@@ -59,7 +59,7 @@ class Process:
         self.cases = []
         self.name = name
         self.time_horizon = time_horizon
-        self.act_dic = {}
+        # self.act_dic = {} seems not to be used
         self.initialized = False
         self.check_point = timestamp
         self.cp_count = 0
@@ -274,6 +274,23 @@ class Process:
                     file.write(json.dumps(nx.readwrite.json_graph.node_link_data(self.process_model_graph)))
         except Exception as e:
             print(e)
+
+    def run_cdesf(self, path: str, filename: str) -> None:
+        """
+        Simulates the event stream by iterating through the stream variable
+        generated reading the csv file, calls set_process at each event
+
+        Parameters
+        --------------------------------------
+        path: str
+            Path where file is stored
+        filename:str
+            File to read
+        """
+        stream = reading_csv(path, filename)
+        for index, event in enumerate(stream):
+            case_id, act_name, act_timestamp = (event[0], event[1], event[2])
+            self.process_event(case_id, act_name, act_timestamp, index)
 
     # commented because part of visualization
     # def gen_plots(self):
