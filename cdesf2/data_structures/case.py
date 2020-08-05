@@ -1,6 +1,5 @@
 import numpy as np
 import datetime as datetime
-from collections import namedtuple
 from typing import List
 from .activity import Activity
 
@@ -23,9 +22,6 @@ class Case:
         self.activities = []
         self.graph_distance = np.nan
         self.time_distance = np.nan
-        # point_structure = np.array([self.gwd, self.twd])
-        # case_point = namedtuple('Case', ['id', 'point'])
-        # self.point = case_point(id=self.id, point=point_structure)
 
     @property
     def point(self):
@@ -40,7 +36,7 @@ class Case:
         """
         return self.activities[-1].timestamp
 
-    def set_activity(self, activity_name: str, activity_timestamp: datetime):
+    def set_activity(self, activity_name: str, activity_timestamp: datetime) -> None:
         """
         Creates a new Activity and appends it to the case activities list.
 

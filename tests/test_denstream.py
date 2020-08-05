@@ -13,7 +13,12 @@ import pytest
 class TestDenstream:
     @pytest.fixture
     def denstream(self):
-        denstream = DenStream(2, 0.15, 0.3, 0.1, 4, 1000)
+        denstream = DenStream(lambda_=0.15,
+                              beta=0.3,
+                              epsilon=0.1,
+                              mu=4,
+                              stream_speed=1000,
+                              n_features=2)
         return denstream
 
     @pytest.fixture
@@ -45,20 +50,20 @@ class TestDenstream:
 
         return case_list
 
-    def test_initial_value_den(self, denstream):
+    def test_initial_value(self, denstream):
         assert isinstance(denstream, DenStream)
         assert denstream.n_features == 2
         assert denstream.lambda_ == 0.15
         assert denstream.beta == 0.3
         assert denstream.epsilon == 0.1
         assert denstream.mu == 4
+        assert denstream.stream_speed == 1000
         assert denstream.p_micro_clusters == []
         assert denstream.o_micro_clusters == []
         assert denstream.time == 0
         assert denstream.all_cases == {}
-        assert denstream.stream_speed == 1000
 
-    def test_no_value_den(self):
+    def test_no_value(self):
         with pytest.raises(Exception):
             assert DenStream()
 
@@ -418,9 +423,8 @@ class TestDenstream:
         assert np.all(denstream.o_micro_clusters[1].CF2 == [1, 1])
         assert denstream.o_micro_clusters[1].weight == 1
         assert denstream.o_micro_clusters[1].creation_time == 0
-
-
         assert denstream.all_cases == {'1': 0, '2': 0, '3': 0, '4': 0, '5': 1, '6': 2}
+
         denstream.stream_speed = 7
         denstream.train(cases_list[0])
         assert len(denstream.o_micro_clusters) == 1
@@ -496,13 +500,12 @@ class TestDenstream:
 
         denstream.train(cases_list[0])
         assert denstream.all_cases == {'1': 0, '2': 0, '3': 0, '4': 0, '5': 1, '6': 2, '7': 3}
+        assert len(denstream.o_micro_clusters) == 1
+        assert len(denstream.p_micro_clusters) == 1
+        assert denstream.p_micro_clusters[0].id == 2
         CF_1 *= (2 ** (-0.15))
         CF2_1 *= (2 ** (-0.15))
         weight_1 *= (2 ** (-0.15))
-        assert len(denstream.o_micro_clusters) == 1
-        assert len(denstream.p_micro_clusters) == 1
-
-        assert denstream.p_micro_clusters[0].id == 2
         assert np.all(denstream.p_micro_clusters[0].CF == CF_1)
         assert np.all(denstream.p_micro_clusters[0].CF2 == CF2_1)
         assert denstream.p_micro_clusters[0].weight == weight_1
@@ -909,7 +912,7 @@ class TestDenstream:
         assert cluster.case_ids == ['1']
 
         cluster = cluster_list[2]
-        assert cluster.id == 2
+        assert cluster.id == 3
         assert np.all(cluster.centroid == [0, 0])
         assert cluster.radius == 0
         assert cluster.weight == 6

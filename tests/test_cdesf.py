@@ -1,34 +1,28 @@
-from cdesf2.core import Process
-from cdesf2.clustering import DenStream
-from cdesf2.data_structures import Case
 from datetime import datetime
-from math import log10
-from os import makedirs, path, remove, rmdir
-import shutil
+from os import path, remove
 import networkx as nx
 import numpy as np
-import json
-from cdesf2.utils import initialize_graph,\
-    normalize_graph, extract_case_distances
 import pytest
+from cdesf2.utils import initialize_graph, normalize_graph, extract_case_distances
+from cdesf2.core import CDESF
+from cdesf2.clustering import DenStream
+from cdesf2.data_structures import Case
+from cdesf2.utils import read_csv
 
 
-class TestProcess:
+class TestCdesf:
     @pytest.fixture
-    def denstream_kwargs(self):
-        denstream_kwargs = {'n_features': 2,
-                            'beta': 0.3,
-                            'lambda_': 0.15,
-                            'epsilon': 0.1,
-                            'mu': 4,
-                            'stream_speed': 1000}
-        return denstream_kwargs
-
-    @pytest.fixture
-    def process(self, denstream_kwargs):
-        process = Process('test', datetime(2015, 5, 10, 8, 22, 53),
-                          43200, False, 'plot_path', False, 'metric_path',
-                          './visualization', denstream_kwargs)
+    def process(self):
+        process = CDESF(name='test',
+                        time_horizon=43200,
+                        lambda_=0.15,
+                        beta=0.3,
+                        epsilon=0.1,
+                        mu=4,
+                        stream_speed=1000,
+                        n_features=2,
+                        gen_plot=False,
+                        gen_metrics=False)
         return process
 
     @pytest.fixture
@@ -50,36 +44,27 @@ class TestProcess:
 
         return [case_3, case_2, case_1]
 
-    def test_initial_value(self, process, denstream_kwargs):
+    def test_initial_value(self, process):
         assert isinstance(process.name, str)
         assert process.name == 'test'
         assert isinstance(process.gen_plot, bool)
         assert not process.gen_plot
-        assert isinstance(process.plot_path, str)
-        assert process.plot_path == 'plot_path'
         assert isinstance(process.gen_metrics, bool)
         assert not process.gen_metrics
-        assert isinstance(process.metrics_path, str)
-        assert process.metrics_path == 'metric_path'
-        assert process.event_count == 0
+        assert process.event_index == 0
         assert process.total_cases == set()
         assert process.cases == []
         assert isinstance(process.time_horizon, int)
         assert process.time_horizon == 43200
-        # assert process.act_dic == {}
         assert not process.initialized
-        assert isinstance(process.check_point, datetime)
-        assert process.check_point == datetime(2015, 5, 10, 8, 22, 53)
         assert process.cp_count == 0
         assert process.nyquist == 0
         assert process.check_point_cases == 0
 
-        # self.process_model_graph = nx.DiGraph()
         assert isinstance(process.process_model_graph, nx.DiGraph)
         assert len(process.process_model_graph.edges) == 0
         assert len(process.process_model_graph.nodes) == 0
 
-        # self.denstream == DenStream(**denstream_kwargs)
         assert isinstance(process.denstream, DenStream)
         assert process.denstream.n_features == 2
         assert process.denstream.lambda_ == 0.15
@@ -94,14 +79,8 @@ class TestProcess:
 
         assert process.cluster_metrics == []
         assert process.case_metrics == []
-        # assert process.pmg_by_cp == []
-
-    def test_no_value(self):
-        with pytest.raises(Exception):
-            assert Process()
 
     def test_initialize_case_metrics(self, process, cases_list):
-
         process.initialize_case_metrics()
         assert process.cases == []
 
@@ -272,10 +251,7 @@ class TestProcess:
         assert activity.timestamp == datetime(2015, 5, 10, 8, 00, 00)
 
     def test_check_point_update(self, process, cases_list):
-
-        # self.cases = nyquist (0=0)
         assert process.cp_count == 0
-
         process.check_point_update()
 
         assert process.cp_count == 1
@@ -284,9 +260,7 @@ class TestProcess:
         assert len(process.process_model_graph.edges) == 0
         assert len(process.process_model_graph.nodes) == 0
 
-        # self.cases < nyquist
         process.nyquist = 1
-
         process.check_point_update()
 
         assert process.cp_count == 2
@@ -321,7 +295,7 @@ class TestProcess:
         assert process.cp_count == 4
         assert process.cases == [case3]
         assert process.check_point_cases == 0
-        assert process.nyquist == 1 * 2
+        assert process.nyquist == 1
         assert len(process.process_model_graph.edges) == 3
         assert len(process.process_model_graph.nodes) == 4
         check_point_graph = initialize_graph(nx.DiGraph(), process.cases)
@@ -350,7 +324,7 @@ class TestProcess:
         assert process.cp_count == 5
         assert process.cases == [case3]
         assert process.check_point_cases == 0
-        assert process.nyquist == 1 * 2
+        assert process.nyquist == 1
         assert len(process.process_model_graph.edges) == 3
         assert len(process.process_model_graph.nodes) == 4
         assert pmg['activityA']['activityB']
@@ -455,14 +429,14 @@ class TestProcess:
                 pmg[node1][node2]['time_normalized']
 
     def test_process_event(self, process):
-
         process.gen_metrics = True
-        assert process.event_count == 0
+        assert process.event_index == 0
         assert process.cases == []
-        assert process.check_point == datetime(2015, 5, 10, 8, 22, 53)
+        assert process.check_point == datetime(2010, 1, 1)
+        process.check_point = datetime(2015, 5, 10, 8, 22, 53)
 
-        process.process_event('1', 'activityA', datetime(2015, 5, 10, 8, 00, 00), 0)
-        assert process.event_count == 1
+        process.process_event('1', 'activityA', datetime(2015, 5, 10, 8, 00, 00))
+        assert process.event_index == 0
         assert process.total_cases == {'1'}
 
         assert process.check_point_cases == 1
@@ -475,15 +449,15 @@ class TestProcess:
         assert process.check_point == datetime(2015, 5, 10, 8, 22, 53)
         assert not process.initialized
 
-        process.process_event('2', 'activityA', datetime(2015, 5, 10, 8, 00, 00), 0)
-        process.process_event('1', 'activityB', datetime(2015, 5, 10, 8, 00, 10), 0)
-        process.process_event('3', 'activityA', datetime(2015, 5, 10, 8, 00, 00), 0)
-        process.process_event('3', 'activityB', datetime(2015, 5, 10, 8, 00, 10), 0)
-        process.process_event('4', 'activityC', datetime(2015, 5, 10, 8, 00, 20), 0)
-        process.process_event('3', 'activityC', datetime(2015, 5, 10, 8, 00, 20), 0)
-        process.process_event('4', 'activityD', datetime(2015, 5, 10, 8, 00, 30), 0)
-        process.process_event('5', 'activityA', datetime(2015, 5, 10, 8, 00, 00), 0)
-        process.process_event('5', 'activityD', datetime(2015, 5, 10, 8, 00, 30), 0)
+        process.process_event('2', 'activityA', datetime(2015, 5, 10, 8, 00, 00))
+        process.process_event('1', 'activityB', datetime(2015, 5, 10, 8, 00, 10))
+        process.process_event('3', 'activityA', datetime(2015, 5, 10, 8, 00, 00))
+        process.process_event('3', 'activityB', datetime(2015, 5, 10, 8, 00, 10))
+        process.process_event('4', 'activityC', datetime(2015, 5, 10, 8, 00, 20))
+        process.process_event('3', 'activityC', datetime(2015, 5, 10, 8, 00, 20))
+        process.process_event('4', 'activityD', datetime(2015, 5, 10, 8, 00, 30))
+        process.process_event('5', 'activityA', datetime(2015, 5, 10, 8, 00, 00))
+        process.process_event('5', 'activityD', datetime(2015, 5, 10, 8, 00, 30))
 
         assert process.check_point_cases == 5
         assert process.total_cases == {'1', '2', '3', '4', '5'}
@@ -500,12 +474,12 @@ class TestProcess:
         assert process.check_point == datetime(2015, 5, 10, 8, 22, 53)
         assert not process.initialized
 
-        process.process_event('4', 'activityE', datetime(2015, 5, 10, 8, 00, 40), 0)
+        process.process_event('4', 'activityE', datetime(2015, 5, 10, 8, 00, 40))
         assert process.check_point == datetime(2015, 5, 10, 8, 22, 53)
         assert process.check_point_cases == 5
         assert not process.initialized
 
-        process.process_event('4', 'activityE', datetime(2015, 5, 10, 21, 00, 40), 0)
+        process.process_event('4', 'activityE', datetime(2015, 5, 10, 21, 00, 40))
         assert process.initialized
         assert process.check_point_cases == 5
         assert process.check_point == datetime(2015, 5, 10, 21, 00, 40)
@@ -516,8 +490,8 @@ class TestProcess:
         assert len(process.denstream.o_micro_clusters) == 0
         assert process.nyquist == 10
 
-        process.process_event('1', 'activityC', datetime(2015, 5, 10, 21, 00, 50), 0)
-        process.process_event('1', 'activityD', datetime(2015, 5, 10, 21, 50, 50), 0)
+        process.process_event('1', 'activityC', datetime(2015, 5, 10, 21, 00, 50))
+        process.process_event('1', 'activityD', datetime(2015, 5, 10, 21, 50, 50))
         assert process.check_point_cases == 5
         assert process.total_cases == {'1', '2', '3', '4', '5'}
         assert process.denstream.all_cases.keys() == {'1', '2', '3', '4', '5'}
@@ -528,7 +502,7 @@ class TestProcess:
         assert len(process.denstream.o_micro_clusters) == 2
         assert process.nyquist == 10
 
-        process.process_event('1', 'activityE', datetime(2015, 5, 10, 21, 50, 50), 0)
+        process.process_event('1', 'activityE', datetime(2015, 5, 10, 21, 50, 50))
         assert process.check_point == datetime(2015, 5, 10, 21, 00, 40)
         assert process.check_point_cases == 5
         assert process.total_cases == {'1', '2', '3', '4', '5'}
@@ -540,17 +514,17 @@ class TestProcess:
         assert len(process.denstream.o_micro_clusters) == 1
         assert process.nyquist == 10
 
-        process.process_event('6', 'activityA', datetime(2015, 5, 11, 10, 50, 50), 0)
-        process.process_event('7', 'activityA', datetime(2015, 5, 11, 10, 50, 50), 0)
-        process.process_event('8', 'activityA', datetime(2015, 5, 11, 10, 50, 50), 0)
-        process.process_event('9', 'activityA', datetime(2015, 5, 11, 10, 50, 50), 0)
-        process.process_event('10', 'activityA', datetime(2015, 5, 11, 10, 50, 50), 0)
-        process.process_event('2', 'activityB', datetime(2015, 5, 12, 22, 50, 50), 0)
-        process.process_event('2', 'activityB', datetime(2015, 5, 13, 22, 50, 50), 0)
+        process.process_event('6', 'activityA', datetime(2015, 5, 11, 10, 50, 50))
+        process.process_event('7', 'activityA', datetime(2015, 5, 11, 10, 50, 50))
+        process.process_event('8', 'activityA', datetime(2015, 5, 11, 10, 50, 50))
+        process.process_event('9', 'activityA', datetime(2015, 5, 11, 10, 50, 50))
+        process.process_event('10', 'activityA', datetime(2015, 5, 11, 10, 50, 50))
+        process.process_event('2', 'activityB', datetime(2015, 5, 12, 22, 50, 50))
+        process.process_event('2', 'activityB', datetime(2015, 5, 13, 22, 50, 50))
 
         assert process.cp_count == 1
-        assert path.isfile(f'./visualization/process_model_graph_{process.cp_count}.json')
-        remove(f'./visualization/process_model_graph_{process.cp_count}.json')
+        assert path.isfile(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+        remove(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
 
         assert process.check_point_cases == 0
         assert process.check_point == datetime(2015, 5, 13, 22, 50, 50)
@@ -564,184 +538,117 @@ class TestProcess:
         assert process.nyquist == 10
         assert len(process.cases) == 10
 
-        process.process_event('11', 'activityB', datetime(2015, 5, 13, 23, 00, 00), 0)
+        process.process_event('11', 'activityB', datetime(2015, 5, 13, 23, 00, 00))
         assert len(process.cases) == 11
         assert process.total_cases == {'1', '2', '3', '4', '5',
                                        '6', '7', '8', '9', '10', '11'}
         assert process.denstream.all_cases.keys() == {'1', '2', '3', '4', '5'}
         assert process.nyquist == 10
-        process.process_event('11', 'activityC', datetime(2015, 5, 14, 12, 00, 00), 0)
+        process.process_event('11', 'activityC', datetime(2015, 5, 14, 12, 00, 00))
 
         assert process.cp_count == 2
-        assert path.isfile(f'./visualization/process_model_graph_{process.cp_count}.json')
-        remove(f'./visualization/process_model_graph_{process.cp_count}.json')
-        rmdir('./visualization')
+        assert path.isfile(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+        remove(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
 
         assert len(process.cases) == 10
         assert process.total_cases == {'1', '2', '3', '4', '5',
                                        '6', '7', '8', '9', '10', '11'}
         assert process.denstream.all_cases.keys() == {'1', '2', '3', '4', '5', '11'}
-        assert process.nyquist == 2
+        assert process.nyquist == 10
 
-        process.process_event('11', 'activityE', datetime(2015, 5, 15, 1, 00, 00), 0)
+        process.process_event('11', 'activityE', datetime(2015, 5, 15, 1, 00, 00))
         assert process.cp_count == 3
-        assert path.isfile(f'./visualization/process_model_graph_{process.cp_count}.json')
-        remove(f'./visualization/process_model_graph_{process.cp_count}.json')
-        rmdir('./visualization')
+        assert path.isfile(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+        remove(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
 
-        assert len(process.cases) == 2
+        assert len(process.cases) == 10
         assert process.cases[0].id == '11'
         assert process.cases[1].id == '2'
         assert process.total_cases == {'1', '2', '3', '4', '5',
                                        '6', '7', '8', '9', '10', '11'}
         assert process.denstream.all_cases.keys() == {'1', '2', '3', '4', '5', '11'}
-        assert process.nyquist == 0
+        assert process.nyquist == 10
 
         assert len(process.process_model_graph.nodes) == 5
-        assert len(process.process_model_graph.edges) == 8
+        assert len(process.process_model_graph.edges) == 7
         assert len(process.denstream.p_micro_clusters) == 4
         assert len(process.denstream.o_micro_clusters) == 3
 
-    def test_gen_case_metrics(self, process):
+    # def test_save_pmg_on_check_point(self, process, cases_list):
+    #     assert process.metrics.path_to_pmg_metrics == f'metrics/{process.name}_process_model_graphs'
+    #
+    #     assert len(process.process_model_graph.edges) == 0
+    #     process.metrics.save_pmg_on_check_point()
+    #     assert process.cp_count == 0
+    #     assert path.exists('./metrics')
+    #     assert not path.isfile(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+    #
+    #     process.cases = cases_list
+    #     process.process_model_graph = initialize_graph(nx.DiGraph(), process.cases)
+    #     pmg = initialize_graph(nx.DiGraph(), process.cases)
+    #     pmg = normalize_graph(pmg)
+    #     process.initialize_case_metrics()
+    #     process.save_pmg_on_check_point()
+    #
+    #     assert process.cp_count == 0
+    #     assert path.exists('./metrics')
+    #     assert path.isfile(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+    #     invalid_cp_count = process.cp_count + 1
+    #     assert not path.isfile(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{invalid_cp_count}.json')
+    #     with open(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json') as file:
+    #         data = json.load(file)
+    #
+    #     nodes = data['nodes']
+    #     edges = data['links']
+    #     activities_ids = [node['id'] for node in nodes]
+    #     assert len(edges) == len(pmg.edges)
+    #     assert activities_ids == list(pmg)
+    #     i = 0
+    #     for node1, node2, data in pmg.edges(data=True):
+    #         edge = edges[i]
+    #         edge_nodes = (edge['source'], edge['target'])
+    #         assert edge_nodes == (node1, node2)
+    #         assert edge['weight'] == data['weight']
+    #         assert edge['time'] == data['time']
+    #         assert edge['weight_normalized'] == data['weight_normalized']
+    #         assert edge['time_normalized'] == data['time_normalized']
+    #         i += 1
+    #
+    #     remove(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+    #
+    #     process.cp_count = 1
+    #     assert not path.isfile(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+    #
+    #     pmg = normalize_graph(pmg)
+    #     process.save_pmg_on_check_point()
+    #
+    #     assert path.isfile(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+    #     with open(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json') as file:
+    #         data = json.load(file)
+    #
+    #     nodes = data['nodes']
+    #     edges = data['links']
+    #     activities_ids = [d['id'] for d in nodes]
+    #     assert len(edges) == len(pmg.edges)
+    #     assert activities_ids == list(pmg)
+    #     i = 0
+    #     for node1, node2, data in pmg.edges(data=True):
+    #         edge = edges[i]
+    #         edge_nodes = (edge['source'], edge['target'])
+    #         assert edge_nodes == (node1, node2)
+    #         assert edge['weight'] == data['weight']
+    #         assert edge['time'] == data['time']
+    #         assert edge['weight_normalized'] == data['weight_normalized']
+    #         assert edge['time_normalized'] == data['time_normalized']
+    #         i += 1
+    #
+    #     remove(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
 
-        case1 = Case('1')
-        case1.graph_distance = 0.5
-        case1.time_distance = 1.5
-        case2 = Case('2')
-        case2.graph_distance = 1.0
-        case2.time_distance = 2.0
-        case3 = Case('3')
-        case3.graph_distance = 0.25
-        case3.time_distance = 1.25
-        case4 = Case('4')
-        case4.graph_distance = 0.75
-        case4.time_distance = 1.75
-
-        process.cases = [case1, case2, case3, case4]
-
-        assert not process.case_metrics
-        process.gen_case_metrics(1, 0)
-        case_metrics = process.case_metrics[0]
-        assert case_metrics[0] == 1
-        assert case_metrics[1] == '1'
-        assert case_metrics[2] == 0.5
-        assert case_metrics[3] == 1.5
-        with pytest.raises(Exception):
-            assert process.case_metrics[1]
-            assert process.case_metrics[2]
-            assert process.case_metrics[3]
-
-        process.gen_case_metrics(2, 1)
-        assert process.case_metrics[0]
-        case_metrics = process.case_metrics[1]
-        assert case_metrics[0] == 2
-        assert case_metrics[1] == '2'
-        assert case_metrics[2] == 1.0
-        assert case_metrics[3] == 2.0
-        with pytest.raises(Exception):
-            assert process.case_metrics[2]
-            assert process.case_metrics[3]
-
-        process.gen_case_metrics(3, 2)
-        assert process.case_metrics[0]
-        assert process.case_metrics[1]
-        case_metrics = process.case_metrics[2]
-        assert case_metrics[0] == 3
-        assert case_metrics[1] == '3'
-        assert case_metrics[2] == 0.25
-        assert case_metrics[3] == 1.25
-        with pytest.raises(Exception):
-            assert process.case_metrics[3]
-
-        process.gen_case_metrics(4, 3)
-        assert process.case_metrics[0]
-        assert process.case_metrics[1]
-        assert process.case_metrics[2]
-        case_metrics = process.case_metrics[3]
-        assert case_metrics[0] == 4
-        assert case_metrics[1] == '4'
-        assert case_metrics[2] == 0.75
-        assert case_metrics[3] == 1.75
-
-    def test_save_pmg_on_check_point(self, process, cases_list):
-        assert process.path_to_json == './visualization'
-
-        assert len(process.process_model_graph.edges) == 0
-        process.save_pmg_on_check_point()
-        assert process.cp_count == 0
-        assert path.exists('./visualization')
-        assert not path.isfile(f'./visualization/process_model_graph_{process.cp_count}.json')
-
-        process.cases = cases_list
-        process.process_model_graph = initialize_graph(nx.DiGraph(), process.cases)
-        pmg = initialize_graph(nx.DiGraph(), process.cases)
-        pmg = normalize_graph(pmg)
-        process.initialize_case_metrics()
-        process.save_pmg_on_check_point()
-
-        assert process.cp_count == 0
-        assert path.exists('./visualization')
-        assert path.isfile(f'./visualization/process_model_graph_{process.cp_count}.json')
-        invalid_cp_count = process.cp_count + 1
-        assert not path.isfile(f'./visualization/process_model_graph_{invalid_cp_count}.json')
-        with open(f'./visualization/process_model_graph_{process.cp_count}.json') as file:
-            data = json.load(file)
-
-        nodes = data['nodes']
-        edges = data['links']
-        activities_ids = [node['id'] for node in nodes]
-        assert len(edges) == len(pmg.edges)
-        assert activities_ids == list(pmg)
-        i = 0
-        for node1, node2, data in pmg.edges(data=True):
-            edge = edges[i]
-            edge_nodes = (edge['source'], edge['target'])
-            assert edge_nodes == (node1, node2)
-            assert edge['weight'] == data['weight']
-            assert edge['time'] == data['time']
-            assert edge['weight_normalized'] == data['weight_normalized']
-            assert edge['time_normalized'] == data['time_normalized']
-            i += 1
-
-        remove(f'./visualization/process_model_graph_{process.cp_count}.json')
-
-        process.cp_count = 1
-        assert not path.isfile(f'./visualization/process_model_graph_{process.cp_count}.json')
-
-        pmg = normalize_graph(pmg)
-        process.save_pmg_on_check_point()
-
-        assert path.isfile(f'./visualization/process_model_graph_{process.cp_count}.json')
-        with open(f'./visualization/process_model_graph_{process.cp_count}.json') as file:
-            data = json.load(file)
-
-        nodes = data['nodes']
-        edges = data['links']
-        activities_ids = [d['id'] for d in nodes]
-        assert len(edges) == len(pmg.edges)
-        assert activities_ids == list(pmg)
-        i = 0
-        for node1, node2, data in pmg.edges(data=True):
-            edge = edges[i]
-            edge_nodes = (edge['source'], edge['target'])
-            assert edge_nodes == (node1, node2)
-            assert edge['weight'] == data['weight']
-            assert edge['time'] == data['time']
-            assert edge['weight_normalized'] == data['weight_normalized']
-            assert edge['time_normalized'] == data['time_normalized']
-            i += 1
-
-        remove(f'./visualization/process_model_graph_{process.cp_count}.json')
-        rmdir('./visualization')
-
-    def test_run_cdesf(self, process):
+    def test_run(self, process):
         dir_path = 'demo'
         filename = 'Detail_Supplier_IW-Frozen.csv'
-        process.run_cdesf(dir_path, filename)
+        stream = read_csv(f'{dir_path}/{filename}')
+        process.run(stream)
 
-        assert not process.initialized
-        assert not process.check_point_cases == 0
-        assert len(process.process_model_graph.nodes) == 0
-        assert len(process.process_model_graph.edges) == 0
-        assert not path.isfile(f'./visualization/process_model_graph_{process.cp_count}.json')
-        #shutil.rmtree('./visualization')
+        assert process.initialized
+        assert path.isfile(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')

@@ -1,14 +1,14 @@
 import pandas as pd
-from cdesf2.utils import reading_csv
+from cdesf2.utils import read_csv
 import numpy as np
 from datetime import datetime
 
 
-def test_reading_csv():
+def test_read_csv():
     path = 'demo'
     filename = 'Detail_Supplier_IW-Frozen.csv'
 
-    event_stream_test = reading_csv(path, filename)
+    event_stream_test = read_csv(f'{path}/{filename}')
 
     assert isinstance(event_stream_test, np.ndarray)
     assert len(event_stream_test) == 5000
@@ -38,11 +38,11 @@ def test_reading_csv():
     assert last_event[2] == datetime(2011, 4, 27, 9, 0, 0)
 
     event_stream = pd.read_csv(f'{path}/{filename}',
-                               usecols=['Case ID', 'Activity', 'Complete Timestamp'],
-                               parse_dates=['Complete Timestamp'],
+                               usecols=['case', 'activity', 'timestamp'],
+                               parse_dates=['timestamp'],
                                infer_datetime_format=True,
                                memory_map=True)
-    event_stream['Activity'].replace(' ', '_', regex=True, inplace=True)
+    event_stream['activity'].replace(' ', '_', regex=True, inplace=True)
 
     assert np.all(event_stream.values == event_stream_test)
 

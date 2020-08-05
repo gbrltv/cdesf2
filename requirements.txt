@@ -4,3 +4,6 @@ setuptools~=41.2.0
 pytest~=5.4.3
 pandas~=1.0.4
 scipy~=1.5.1
+matplotlib~=3.2.2
+seaborn~=0.10.1
+pygraphviz~=1.3
