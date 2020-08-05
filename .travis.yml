@@ -12,7 +12,6 @@ python:
 - '3.6'
 before_install:
   - pip install --upgrade pytest
-  - "export PYTHONPATH=$PYTHONPATH:$(pwd)"
 install:
 - pip install .[test]
 before_script:
