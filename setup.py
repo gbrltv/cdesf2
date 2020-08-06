@@ -37,7 +37,8 @@ test_deps =[
     "networkx",
     "scipy",
     "pandas",
-    "matplotlib"
+    "matplotlib",
+    "pygraphviz"
 ]
 
 extras = {
