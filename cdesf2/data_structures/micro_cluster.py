@@ -9,7 +9,7 @@ class MicroCluster:
 
     def __init__(self, id_: int, n_features: int, creation_time: int, lambda_: float):
         """
-        Receives the number of feature analyzed, the creation time,
+        Receives the number of features analyzed, the creation time,
         the importance of historical data and the stream speed.
         Initializes the MicroCluster attributes.
 
@@ -19,7 +19,7 @@ class MicroCluster:
             The number of features DenStream must consider,
             in our case is always set to 2, since we have
             two attributes (graph_distance and time_distance)
-        time: int
+        creation_time: int
             Creation time in single units
         lambda_: float
             Sets the importance of historical data for the
@@ -34,7 +34,7 @@ class MicroCluster:
         self.creation_time = creation_time
 
     @property
-    def centroid(self) -> float:
+    def centroid(self) -> np.ndarray:
         """
         Computes the micro-cluster's centroid value,
         which is given by CF divided by weight.
@@ -46,7 +46,7 @@ class MicroCluster:
         return self.CF / self.weight
 
     @property
-    def radius(self) -> float:
+    def radius(self) -> np.ndarray:
         """
         Computes the micro-cluster's radius.
 
@@ -57,7 +57,7 @@ class MicroCluster:
         cf1_squared = (self.CF / self.weight) ** 2
         return np.nan_to_num(np.nanmax(((self.CF2 / self.weight) - cf1_squared) ** (1 / 2)))
 
-    def radius_with_new_point(self, point: np.ndarray) -> float:
+    def radius_with_new_point(self, point: np.ndarray) -> np.ndarray:
         """
         Computes the micro-cluster's radius considering a new point.
         The returned value is then compared to self._epsilon to check

@@ -7,14 +7,14 @@ import pytest
 
 def test_case():
     case = Case('1')
-    assert type(case) is Case
+    assert isinstance(case, Case)
 
 
 def test_initial_value():
     case = Case('1')
-    assert type(case.id) is str
+    assert isinstance(case.id, str)
     assert case.id == '1'
-    assert type(case.activities) is list
+    assert isinstance(case.activities, list)
     assert case.activities == []
     assert case.graph_distance is np.nan
     assert case.time_distance is np.nan
@@ -27,15 +27,12 @@ def test_no_value():
 
 def test_set_activity():
     activity = Activity('activity1', datetime.strptime('2015/05/10 08:22:53.000', '%Y/%m/%d %H:%M:%S.%f'))
-    activity1 = Activity('activity 1', datetime.strptime('2015/05/10 08:22:53.000', '%Y/%m/%d %H:%M:%S.%f'))
     case = Case('2')
     case.set_activity(activity.name, activity.timestamp)
-    case.set_activity(activity1.name, activity1.timestamp)
 
-    assert type(case.activities[0]) is Activity
+    assert isinstance(case.activities[0], Activity)
     assert case.activities[0].name == 'activity1'
     assert case.activities[0].timestamp == datetime(2015, 5, 10, 8, 22, 53)
-    assert case.activities[1].name == 'activity_1'
 
 
 def test_last_time():

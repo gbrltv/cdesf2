@@ -21,31 +21,28 @@ class DenStream:
     Manages the DenStream algorithm.
     """
 
-    def __init__(self, n_features: int, lambda_: float, beta: float,
-                 epsilon: float, mu: int, stream_speed: int):
+    def __init__(self, lambda_: float, beta: float, epsilon: float, mu: int, stream_speed: int, n_features: int):
         """
-        Initializes the DenStream class.
+        Initializes the DenStream class and sets up the main attributes.
 
         Parameters
         --------------------------------------
+        lambda_: float
+            Sets the importance of historical data for
+            the current clusters
+        beta: float
+            Controls micro-cluster weights and promotion
+        epsilon: float
+            Defines the maximum range of a micro-cluster action
+        mu: int
+            Controls micro-cluster weights and promotion
+        stream_speed: int
+            Controls how frequent the decay factor (lambda)
+            influences the micro-clusters
         n_features: int
             The number of features DenStream must consider,
             in our case is always set to 2, since we have
             two attributes (graph_distance and time_distance)
-        lambda_: float
-            Sets the importance of historical data for the
-            current clusters
-        beta: float
-            Defines the threshold for a micro-cluster weight
-            for that instance to be considered inside the cluster
-        epsilon: float
-            Defines the maximum distance between an instance
-            and a cluster for that instance to be considered
-            inside the cluster
-        mu: int
-            It is the maximum weight an overall neighbourhood
-            needs to be considered a core object
-        stream_speed: int
         """
         self.n_features = n_features
         self.lambda_ = lambda_
@@ -85,26 +82,23 @@ class DenStream:
     def find_closest_mc(self, point: np.ndarray, micro_cluster_list: List[MicroCluster]) \
             -> Tuple[int, MicroCluster, float]:
         """
-        Find the closest p_micro_cluster or the closest o_micro_cluster
-        to the point "point" according to the Euclidean Distance
-        between it and the cluster's centroid.
+        Find the closest micro-cluster to a point according
+        to the Euclidean Distance between the point and
+        the cluster's centroid.
 
         Parameters
         --------------------------------------
         point: np.ndarray,
             Array position of a point
-        micro_cluster_list: dict,
-            The dictionary of micro-clusters, it
-            can be p_micro_clusters or o_micro_cluster
-            depending if you want to find the closest
-            p-micro-cluster or the closest o-micro-cluster
+        micro_cluster_list: List[MicroCluster],
+            The dictionary of micro-clusters
+            Can be either p or o micro_clusters
         Returns
         --------------------------------------
         i: int,
             Index of the micro-cluster
-        micro_cluster_list: MicroCluster,
-            The correspondent p-micro-cluster
-            or o-micro-cluster which the point was added
+        micro_cluster_list[i]: MicroCluster,
+            The correspondent micro-cluster closest to the point
         dist: np.float64,
             Distance between the micro-cluster and the point
         """
@@ -118,14 +112,17 @@ class DenStream:
 
     def add_point(self, case: Case) -> int:
         """
-        Try to add a point to the existing p_micro_clusters at time "t"
-        Otherwise, try to add that point to the existing o_micro_clusters
-        If all fails, create a new o_micro_cluster with that new point
+        Tries to add a point to an existing p-micro-cluster at time "t"
+        Otherwise, tries to add that point to an existing o-micro-clusters
+        If all fails, creates a new o-micro-cluster with that new point
 
         Parameters
         --------------------------------------
         case: Case
             A Case object, with all its attributes
+        Returns
+        --------------------------------------
+        The micro-cluster id to which the point was added
         """
         try:
             # Try to merge point with closest p_mc
@@ -164,7 +161,12 @@ class DenStream:
 
     def decay_micro_clusters(self, micro_cluster_updated: int) -> None:
         """
-        Decays p-micro-clusters weights after stream_speed points
+        Decays micro-clusters weights after stream_speed points
+
+        Parameters
+        --------------------------------------
+        micro_cluster_updated: int
+            Id of the micro-cluster not to be decayed
         """
         for mc in self.p_micro_clusters:
             if mc.id != micro_cluster_updated:
@@ -172,13 +174,12 @@ class DenStream:
 
     def train(self, case: Case):
         """
-        "Train" Denstream by updating its p_micro_clusters and o_micro_clusters
-        with a new point
+        "Trains" Denstream by updating micro_clusters with a new point
 
         Parameters
         --------------------------------------
         case: Case
-            A Case object, with all its attributes
+            A Case object with all its attributes
         """
         # adds new point to a micro cluster and retrieves the micro cluster id
         micro_cluster_updated = self.add_point(case)
@@ -208,42 +209,38 @@ class DenStream:
                 if mc.weight < e:
                     self.o_micro_clusters.pop(i)
 
-    #    Used only in visualization
-    # def is_normal(self, point: np.ndarray) -> bool:
-    #    """
-    #    Find if point "point" is inside any p_micro_cluster.
-    #    Used only in visualization
+    def is_normal(self, point: np.ndarray) -> bool:
+        """
+        Finds if a point is inside any p_micro_cluster
 
-    #    Parameters
-    #    --------------------------------------
-    #    point: np.ndarray
-    #        Array position of a point
-    #    Returns
-    #    --------------------------------------
-    #    True if point "point" is inside any p_micro_cluster
-    #    False if point "point" is not inside any p_micro_cluster
-    #    """
-    #    if len(self.p_micro_clusters) == 0:
-    #        return False
-    #
-    #    distances = [(i, self.euclidean_distance(point, cluster.centroid))
-    #                 for i, cluster in self.p_micro_clusters.items()]
-    #    for i, dist in distances:
-    #        if dist <= self.epsilon:
-    #            return True
-    #    return False
+        Parameters
+        --------------------------------------
+        point: np.ndarray
+            Array position of a point
+        Returns
+        --------------------------------------
+        True if point "point" is inside any p_micro_cluster
+        False if point "point" is not inside any p_micro_cluster
+        """
+        if len(self.p_micro_clusters) == 0:
+            return False
+
+        distances = [self.euclidean_distance(point, np.array(cluster.centroid)) for cluster in self.p_micro_clusters]
+        for dist in distances:
+            if dist <= self.epsilon:
+                return True
+        return False
 
     def dbscan(self, buffer: List) -> None:
         """
-        Perform DBSCAN to create initial p_micro_clusters
+        Performs DBSCAN to create initial p-micro-clusters
         Works by grouping points with distance <= self._epsilon
         and filtering groups that are dense enough (weight >= beta * mu)
 
         Parameters
         --------------------------------------
         buffer: List
-            A buffer containing all cases
-            which will be used in DBSCAN
+            A buffer containing all cases which will be used in DBSCAN
         """
         used_cases = set()
         for case in (case for case in buffer if case.id not in used_cases):
@@ -271,7 +268,7 @@ class DenStream:
 
     def generate_clusters(self) -> Tuple[List[List], List[List]]:
         """
-        Perform DBSCAN to create the final c_micro_clusters
+        Perform DBSCAN to create the final micro-clusters
         Works by grouping dense enough p_micro_clusters (weight >= mu)
         with distance <= 2 * self._epsilon
 
@@ -281,11 +278,9 @@ class DenStream:
         that will be inside the c-micro-cluster and which are divided
         between a dense group and a not dense group
         dense_groups: list
-            A Cluster object list of dense enough
-            groups of p-micro-clusters
+            A Cluster object list of dense enough groups of c-micro-clusters
         not_dense_groups: list
-            A Cluster object list of not dense enough
-            groups of p-micro-clusters
+            A Cluster object list of not dense enough groups of p-micro-clusters
         """
         if len(self.p_micro_clusters) > 1:
             connected_clusters = []
@@ -363,9 +358,9 @@ class DenStream:
         --------------------------------------
         List of outlier clusters
         """
-        return [Cluster(id_=i,
+        return [Cluster(id_=mc.id,
                         centroid=mc.centroid,
                         radius=mc.radius,
                         weight=mc.weight,
-                        case_ids=mc.case_ids)
-                for i, mc in self.o_micro_clusters]
+                        case_ids=[k for k, v in self.all_cases.items() if v == mc.id])
+                for mc in self.o_micro_clusters]

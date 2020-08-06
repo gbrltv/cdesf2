@@ -36,7 +36,13 @@ test_deps =[
     "codacy-coverage",
     "networkx",
     "scipy",
-    "pandas"
+    "pandas",
+    "matplotlib",
+    "seaborn",
+    "pydot",
+    "pydot-ng",
+    "pygraphviz",
+    "graphviz"
 ]
 
 extras = {

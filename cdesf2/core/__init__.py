@@ -1,5 +1,5 @@
-from .process import Process
+from .cdesf import CDESF
 
 __all__ = [
-    "Process"
+    "CDESF"
 ]

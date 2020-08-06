@@ -4,6 +4,8 @@ from .graph_operation import initialize_graph
 from .graph_operation import normalize_graph
 from .graph_operation import merge_graphs
 from .extract_case_distances import extract_case_distances
+from .reading import read_csv
+from .metrics import Metrics
 
 __all__ = [
     "time_difference",
@@ -11,5 +13,7 @@ __all__ = [
     "initialize_graph",
     "normalize_graph",
     "merge_graphs",
-    "extract_case_distances"
+    "extract_case_distances",
+    "read_csv",
+    "Metrics"
 ]
