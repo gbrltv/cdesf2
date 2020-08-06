@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 import pygraphviz as pgv
+import pydot
 
 
 def save_graph(graph: nx.DiGraph, path: str) -> None:
