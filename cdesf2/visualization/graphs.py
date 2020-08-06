@@ -43,5 +43,5 @@ def save_graphviz(graph: nx.DiGraph, path: str) -> None:
     """
     graph = nx.nx_agraph.to_agraph(graph)
     graph.node_attr.update(style='filled', fillcolor='#40e0d0')
-    graph.layout()
+    graph.layout('dot')
     graph.draw(f'{path}.png')
