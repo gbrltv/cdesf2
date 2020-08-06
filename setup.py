@@ -39,8 +39,9 @@ test_deps =[
     "pandas",
     "matplotlib",
     "seaborn",
-    "graphviz",
-    "pydot"
+    "pydot",
+    "pydot-ng"
+    "graphviz"
 ]
 
 extras = {
