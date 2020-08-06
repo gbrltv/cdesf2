@@ -40,7 +40,7 @@ test_deps =[
     "matplotlib",
     "seaborn",
     "graphviz",
-    "pygraphviz"
+    "pydot"
 ]
 
 extras = {
