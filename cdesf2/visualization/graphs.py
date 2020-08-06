@@ -18,6 +18,7 @@ def save_graph(graph: nx.DiGraph, path: str) -> None:
     plt.figure(figsize=(20, 20))
 
     pos = nx.spring_layout(graph)
+
     nx.draw_networkx_edges(graph, pos, width=2, arrowsize=30)
     nx.draw_networkx_edge_labels(graph, pos, font_size=25, edge_labels=nx.get_edge_attributes(graph, 'weight'))
     nx.draw_networkx_nodes(graph, pos, node_size=[len(v) * 1000 for v in graph.nodes()])
