@@ -7,3 +7,4 @@ scipy~=1.5.1
 matplotlib~=3.2.2
 seaborn~=0.10.1
 graphviz~=2.38.0
+pygraphviz~=1.5
