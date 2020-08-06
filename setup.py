@@ -41,6 +41,7 @@ test_deps =[
     "seaborn",
     "pydot",
     "pydot-ng",
+    "pygraphviz",
     "graphviz"
 ]
 

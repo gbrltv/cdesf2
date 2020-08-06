@@ -8,4 +8,5 @@ matplotlib~=3.2.2
 seaborn~=0.10.1
 pydot~=1.4.1
 pydot-ng~=2.0.0
+pygraphviz~=1.6
 graphviz~=2.38.0

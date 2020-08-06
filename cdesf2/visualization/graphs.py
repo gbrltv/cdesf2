@@ -39,10 +39,13 @@ def save_graphviz(graph: nx.DiGraph, path: str) -> None:
     path: str
         Path and name of the file to be saved
     """
-    # graph = nx.nx_agraph.to_agraph(graph)
-    # graph.node_attr.update(style='filled', fillcolor='#40e0d0')
-    # graph.layout('dot')
-    # graph.draw(f'{path}.png')
+    try:
+        graph = nx.nx_agraph.to_agraph(graph)
+        graph.node_attr.update(style='filled', fillcolor='#40e0d0')
+        graph.layout('dot')
+        graph.draw(f'{path}.png')
 
-    graph = nx.drawing.nx_pydot.to_pydot(graph)
-    graph.write_png(f'{path}.png')
+        # graph = nx.drawing.nx_pydot.to_pydot(graph)
+        # graph.write_png(f'{path}.png')
+    except Exception:
+        save_graph(graph, path)
