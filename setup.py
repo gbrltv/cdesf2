@@ -38,7 +38,8 @@ test_deps =[
     "scipy",
     "pandas",
     "matplotlib",
-    "pygraphviz"
+    "pygraphviz",
+    "seaborn"
 ]
 
 extras = {
