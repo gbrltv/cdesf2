@@ -354,6 +354,7 @@ class CDESF:
                 self.check_point = activity_timestamp
             self.process_event(case_id, activity_name, activity_timestamp)
 
+        self.drift_indexes = list(np.unique(self.drift_indexes))
         print("Total number of drifts:", len(self.drift_indexes))
         print("Drift points:", self.drift_indexes)
         cumulative_stream_drifts(len(stream), self.drift_indexes, f'visualization/drifts/{self.name}.pdf')
