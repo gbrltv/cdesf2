@@ -4,14 +4,14 @@ from cdesf2.core import CDESF
 
 def test_pipeline():
     path = 'demo'
-    filename = 'sudden_trace_noise5_100_IOR.csv'
+    filename = 'sudden_trace_noise20_500_cb.csv'
 
     event_stream_test = read_csv(f'{path}/{filename}')
-    cdesf = CDESF(name='sudden_trace_noise5_100_IOR',
-                  time_horizon=86400,
+    cdesf = CDESF(name='sudden_trace_noise20_500_cb',
+                  time_horizon=259200,
                   lambda_=0.05,
                   beta=0.2,
-                  epsilon=0.2,
+                  epsilon=0.6,
                   mu=4,
                   stream_speed=100,
                   n_features=2,

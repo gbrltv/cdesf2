@@ -110,9 +110,6 @@ class CDESF:
             graph_distance, time_distance = extract_case_distances(self.process_model_graph, case)
             case.graph_distance = graph_distance
             case.time_distance = time_distance
-            if self.gen_metrics:
-                self.metrics.compute_case_metrics(self.event_index, self.check_point, self.cp_count,
-                                                  case, self.denstream.is_normal(case.point))
 
     def release_cases_from_memory(self) -> None:
         """
@@ -160,6 +157,9 @@ class CDESF:
 
         # metrics
         if self.gen_metrics:
+            for case in self.cases:
+                self.metrics.compute_case_metrics(self.event_index, self.check_point, self.cp_count,
+                                                  case, self.denstream.is_normal(case.point))
             self.metrics.save_case_metrics_on_check_point()
             self.metrics.compute_cluster_metrics(self.event_index, self.check_point, self.cp_count,
                                                  self.denstream.generate_clusters(),
@@ -239,6 +239,7 @@ class CDESF:
                     self.active_core_clusters.add(cluster.id)
                     self.drift_indexes.append(self.event_index)
                     print("DRIFT ALERT")
+                    print("Stream position:", self.event_index)
                     print("New core behavior detected: cluster", cluster.id)
                     print("Cluster weight:", cluster.weight)
                     print("Cluster radius:", cluster.radius)

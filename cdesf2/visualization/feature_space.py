@@ -44,7 +44,6 @@ def feature_space(process_name: str,
 
     plt.figure(figsize=(10, 10), dpi=400)
     ax = plt.subplot(111)
-    plt.title(f'{process_name}, stream index:{event_index}, CP: {cp}')
 
     for group in p_clusters:
         for cluster in group:
@@ -69,6 +68,9 @@ def feature_space(process_name: str,
     for p in outliers:
         ax.scatter(*p, color='orange', marker='x', s=15)
 
+    plt.title(f'{process_name}, stream index:{event_index}, CP: {cp}')
+    plt.xlabel('$GD_{trace}$', size=15)
+    plt.ylabel('$GD_{time}$', size=15)
     plt.tight_layout()
     plt.savefig(f'{plot_path}/{event_index}.png')
     plt.close()
