@@ -11,7 +11,7 @@ Clone the repository into your local machine:
 
 .. code:: shell
     
-    git clone https://github.com/gbrltv/CDESF2.git
+    git clone https://github.com/gbrltv/cdesf2.git
 
 .. Add pip installation when available
 
