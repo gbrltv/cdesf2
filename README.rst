@@ -13,11 +13,7 @@ Clone the repository into your local machine:
     
     git clone https://github.com/gbrltv/CDESF2.git
 
-.. As usual, just download it using pip:
-
-.. code:: shell
-
-  ..  pip install cdesf2
+.. Add pip installation when available
 
 Tests Coverage
 ----------------------------------------------
