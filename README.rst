@@ -7,11 +7,13 @@ Latest version of CDESF framework - (under construction)
 
 How do I install this package?
 ----------------------------------------------
-As usual, just download it using pip:
+Clone the repository into your local machine:
 
 .. code:: shell
+    
+    git clone https://github.com/gbrltv/cdesf2.git
 
-    pip install cdesf2
+.. Add pip installation when available
 
 Tests Coverage
 ----------------------------------------------
