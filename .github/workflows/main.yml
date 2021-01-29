@@ -15,9 +15,9 @@ jobs:
         uses: actions/setup-python@v2
       - name: Set up Graphviz
         run: |
-          apt-get update -y
-          apt-get -y install --no-install-recommends graphviz
-          apt-get -y install --no-install-recommends libgraphviz-dev
+          sudo apt-get update -y
+          sudo apt-get -y install --no-install-recommends graphviz
+          sudo apt-get -y install --no-install-recommends libgraphviz-dev
       - name: Cache pip
         uses: actions/cache@v2
         with:
