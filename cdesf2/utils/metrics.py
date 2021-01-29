@@ -27,11 +27,11 @@ class Metrics:
         self.cluster_metrics = []
         self.file_name = file_name
 
-        self.path_to_pmg_metrics = f'metrics/{file_name}_process_model_graphs'
-        self.path_to_pmg_vis = f'visualization/{file_name}_process_model_graphs'
-        self.path_to_drifts = 'visualization/drifts'
-        self.path_to_case_metrics = 'metrics/case_metrics'
-        self.path_to_cluster_metrics = 'metrics/cluster_metrics'
+        self.path_to_pmg_metrics = f'output/metrics/{file_name}_process_model_graphs'
+        self.path_to_pmg_vis = f'output/visualization/{file_name}_process_model_graphs'
+        self.path_to_drifts = 'output/visualization/drifts'
+        self.path_to_case_metrics = 'output/metrics/case_metrics'
+        self.path_to_cluster_metrics = 'output/metrics/cluster_metrics'
         try:
             makedirs(self.path_to_pmg_metrics, exist_ok=True)
             makedirs(self.path_to_pmg_vis, exist_ok=True)

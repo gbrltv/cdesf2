@@ -80,7 +80,7 @@ class CDESF:
         self.active_core_clusters = set()
         self.drift_indexes = []
         self.metrics = Metrics(self.name)
-        self.feature_space_plot_path = f'visualization/{self.name}_feature_space'
+        self.feature_space_plot_path = f'output/visualization/{self.name}_feature_space'
         makedirs(self.feature_space_plot_path, exist_ok=True)
 
     def get_case(self, case_id: str) -> Union[int, None]:
@@ -358,4 +358,4 @@ class CDESF:
         self.drift_indexes = list(np.unique(self.drift_indexes))
         print("Total number of drifts:", len(self.drift_indexes))
         print("Drift points:", self.drift_indexes)
-        cumulative_stream_drifts(len(stream), self.drift_indexes, f'visualization/drifts/{self.name}.pdf')
+        cumulative_stream_drifts(len(stream), self.drift_indexes, f'output/visualization/drifts/{self.name}.pdf')

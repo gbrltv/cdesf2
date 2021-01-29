@@ -1,13 +1,14 @@
 from datetime import datetime
-from os import path, remove
+from os import path
+
 import networkx as nx
 import numpy as np
 import pytest
-from cdesf2.utils import initialize_graph, normalize_graph, extract_case_distances
-from cdesf2.core import CDESF
 from cdesf2.clustering import DenStream
+from cdesf2.core import CDESF
 from cdesf2.data_structures import Case
-from cdesf2.utils import read_csv
+from cdesf2.utils import (extract_case_distances, initialize_graph,
+                          normalize_graph, read_csv)
 
 
 class TestCdesf:
@@ -523,8 +524,7 @@ class TestCdesf:
         process.process_event('2', 'activityB', datetime(2015, 5, 13, 22, 50, 50))
 
         assert process.cp_count == 1
-        assert path.isfile(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
-        remove(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+        assert path.isfile(f'output/metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
 
         assert process.check_point_cases == 0
         assert process.check_point == datetime(2015, 5, 13, 22, 50, 50)
@@ -547,8 +547,7 @@ class TestCdesf:
         process.process_event('11', 'activityC', datetime(2015, 5, 14, 12, 00, 00))
 
         assert process.cp_count == 2
-        assert path.isfile(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
-        remove(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+        assert path.isfile(f'output/metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
 
         assert len(process.cases) == 10
         assert process.total_cases == {'1', '2', '3', '4', '5',
@@ -558,8 +557,7 @@ class TestCdesf:
 
         process.process_event('11', 'activityE', datetime(2015, 5, 15, 1, 00, 00))
         assert process.cp_count == 3
-        assert path.isfile(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
-        remove(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+        assert path.isfile(f'output/metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
 
         assert len(process.cases) == 10
         assert process.cases[0].id == '11'
@@ -651,4 +649,4 @@ class TestCdesf:
         process.run(stream)
 
         assert process.initialized
-        assert path.isfile(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+        assert path.isfile(f'output/metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')

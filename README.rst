@@ -1,6 +1,6 @@
 CDESF: Concept-drift on Event Stream Framework
 =========================================================================================
-|travis| |sonar_quality| |sonar_maintainability| |codacy|
+|github-ci| |sonar_quality| |sonar_maintainability| |codacy|
 |code_climate_maintainability| |pip| |downloads|
 
 Latest version of CDESF framework - (under construction)
@@ -41,6 +41,9 @@ Please, use “Overlapping Analytic Stages in Online Process Mining”
     volume={},
     number={},
     pages={167-175}}
+
+.. |github-ci| image:: https://github.com/emilioschepis/cdesf2/workflows/CI/badge.svg?branch=master
+   :alt: GitHub CI build
 
 .. |travis| image:: https://travis-ci.org/gbrltv/CDESF2.png
    :target: https://travis-ci.org/gbrltv/CDESF2
