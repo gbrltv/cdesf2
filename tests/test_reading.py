@@ -1,7 +1,8 @@
 import pandas as pd
-from cdesf2.utils import read_csv
 import numpy as np
 from datetime import datetime
+
+from cdesf2.utils import (read_csv, read_csv_pm4py)
 
 
 def test_read_csv():
@@ -46,3 +47,17 @@ def test_read_csv():
 
     assert np.all(event_stream.values == event_stream_test)
 
+
+def test_read_csv_pm4py():
+    path = 'demo/Detail_Supplier_IW-Frozen.csv'
+    trace = read_csv_pm4py(path)
+
+    assert len(trace) == 1262
+
+    events = []
+    for case in trace:
+        # TODO: Is `_list` the best way to access events in a `Trace`?
+        for event in case._list:
+            events.append(event)
+
+    assert len(events) == 5000

@@ -9,3 +9,4 @@ seaborn~=0.10.1
 pydot~=1.4.1
 pydot-ng~=2.0.0
 pygraphviz~=1.6
+pm4py~=2.1.4.1
