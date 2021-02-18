@@ -77,12 +77,12 @@ class Metrics:
         Saves the case metrics into a file according to a set path and name.
         Also releases the case_metrics attribute
         """
-        pd.read_csv(f'{self.path_to_case_metrics}/{self.file_name}.csv')\
-            .append(pd.DataFrame(self.case_metrics,
-                                 columns=['stream_index', 'timestamp', 'check point', 'case',
-                                          'graph distance', 'time distance', 'label']))\
-            .to_csv(f'{self.path_to_case_metrics}/{self.file_name}.csv', index=False)
-        self.case_metrics = []
+        cm_path = f'{self.path_to_case_metrics}/{self.file_name}.csv'
+        columns = ['stream_index', 'timestamp', 'check point',
+                   'case', 'graph distance', 'time distance', 'label']
+        pd.read_csv(cm_path).append(pd.DataFrame(self.case_metrics,
+                                                 columns=columns)).to_csv(cm_path, index=False)
+        self.case_metrics.clear()
 
     def compute_cluster_metrics_helper(self, event_index: int, timestamp: datetime, cp_count: int,
                                        cluster: Cluster, cluster_type: str) -> None:
@@ -127,12 +127,12 @@ class Metrics:
         Saves the cluster metrics into a file according to a set path and name.
         Also releases the cluster_metrics attribute
         """
-        pd.read_csv(f'{self.path_to_cluster_metrics}/{self.file_name}.csv')\
-            .append(pd.DataFrame(self.cluster_metrics,
-                                 columns=['stream_index', 'timestamp', 'check point', 'cluster id',
-                                          'x', 'y', 'radius', 'weight', 'cluster type']))\
-            .to_csv(f'{self.path_to_cluster_metrics}/{self.file_name}.csv', index=False)
-        self.cluster_metrics = []
+        cm_path = f'{self.path_to_cluster_metrics}/{self.file_name}.csv'
+        columns = ['stream_index', 'timestamp', 'check point', 'cluster id',
+                   'x', 'y', 'radius', 'weight', 'cluster type']
+        pd.read_csv(cm_path).append(pd.DataFrame(
+            self.cluster_metrics, columns=columns)).to_csv(cm_path, index=False)
+        self.cluster_metrics.clear()
 
     def save_pmg_on_check_point(self, process_model_graph: nx.DiGraph, cp_count: int) -> None:
         """

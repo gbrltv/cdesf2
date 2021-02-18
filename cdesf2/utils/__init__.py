@@ -4,7 +4,7 @@ from .graph_operation import initialize_graph
 from .graph_operation import normalize_graph
 from .graph_operation import merge_graphs
 from .extract_case_distances import extract_case_distances
-from .reading import read_csv, read_csv_pm4py
+from .reading import read_csv, read_xes
 from .metrics import Metrics
 
 __all__ = [
@@ -15,6 +15,6 @@ __all__ = [
     "merge_graphs",
     "extract_case_distances",
     "read_csv",
-    "read_csv_pm4py",
-    "Metrics"
+    "read_xes",
+    "Metrics",
 ]

@@ -3,10 +3,7 @@ from cdesf2.core import CDESF
 
 
 def test_pipeline():
-    path = 'demo'
-    filename = 'sudden_trace_noise20_500_cb.csv'
-
-    event_stream_test = read_csv(f'{path}/{filename}')
+    event_stream_test = read_csv(f'demo/sudden_trace_noise20_500_cb.csv')
     cdesf = CDESF(name='sudden_trace_noise20_500_cb',
                   time_horizon=259200,
                   lambda_=0.05,

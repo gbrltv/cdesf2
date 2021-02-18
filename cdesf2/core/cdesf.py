@@ -8,6 +8,7 @@ from ..utils import extract_case_distances, initialize_graph, merge_graphs, Metr
 from ..data_structures import Case
 from ..clustering import DenStream
 from ..visualization import cumulative_stream_drifts, feature_space
+from pm4py.objects.log import log
 
 
 class CDESF:
@@ -74,7 +75,8 @@ class CDESF:
         self.nyquist = 0
         self.check_point_cases = 0
         self.process_model_graph = nx.DiGraph()
-        self.denstream = DenStream(lambda_, beta, epsilon, mu, stream_speed, n_features)
+        self.denstream = DenStream(
+            lambda_, beta, epsilon, mu, stream_speed, n_features)
         self.cluster_metrics = []
         self.case_metrics = []
         self.active_core_clusters = set()
@@ -107,7 +109,8 @@ class CDESF:
         Initializes metrics in case the user triggers this task
         """
         for case in self.cases:
-            graph_distance, time_distance = extract_case_distances(self.process_model_graph, case)
+            graph_distance, time_distance = extract_case_distances(
+                self.process_model_graph, case)
             case.graph_distance = graph_distance
             case.time_distance = time_distance
 
@@ -167,7 +170,8 @@ class CDESF:
             self.metrics.save_cluster_metrics_on_check_point()
 
         if len(self.process_model_graph.edges) > 0:
-            self.metrics.save_pmg_on_check_point(self.process_model_graph, self.cp_count)
+            self.metrics.save_pmg_on_check_point(
+                self.process_model_graph, self.cp_count)
 
         self.initialized = True
 
@@ -221,7 +225,8 @@ class CDESF:
                 self.nyquist = self.check_point_cases * 2
 
             check_point_graph = initialize_graph(nx.DiGraph(), self.cases)
-            self.process_model_graph = merge_graphs(self.process_model_graph, check_point_graph)
+            self.process_model_graph = merge_graphs(
+                self.process_model_graph, check_point_graph)
 
         self.check_point_cases = 0
 
@@ -287,7 +292,8 @@ class CDESF:
             """
             If we are past the first check point, graph distances are calculated and DenStream triggered
             """
-            graph_distance, time_distance = extract_case_distances(self.process_model_graph, self.cases[case_index])
+            graph_distance, time_distance = extract_case_distances(
+                self.process_model_graph, self.cases[case_index])
             self.cases[case_index].graph_distance = graph_distance
             self.cases[case_index].time_distance = time_distance
 
@@ -333,24 +339,27 @@ class CDESF:
                 self.check_point = current_time
                 self.check_point_update()
 
-                self.metrics.save_pmg_on_check_point(self.process_model_graph, self.cp_count)
+                self.metrics.save_pmg_on_check_point(
+                    self.process_model_graph, self.cp_count)
                 if self.gen_metrics:
                     self.metrics.save_case_metrics_on_check_point()
                     self.metrics.save_cluster_metrics_on_check_point()
 
-    def run(self, stream: np.ndarray) -> None:
+    def run(self, stream: log.EventStream) -> None:
         """
         Simulates the event stream by iterating through the stream variable
-        generated reading the csv file, calls set_process at each new event
+        generated reading the input file, calls set_process at each new event
 
         Parameters
         --------------------------------------
-        stream: pd.DataFrame
-            Stream of events which was read by the read_csv function
+        stream: log.EventStream
+            Event stream imported by PM4Py
         """
+
         for index, event in enumerate(stream):
             self.event_index = index
-            case_id, activity_name, activity_timestamp = (event[0], event[1], event[2])
+            case_id, activity_name, activity_timestamp = event[
+                'case:concept:name'], event['concept:name'], event['time:timestamp']
             if index == 0:
                 self.check_point = activity_timestamp
             self.process_event(case_id, activity_name, activity_timestamp)
@@ -358,4 +367,5 @@ class CDESF:
         self.drift_indexes = list(np.unique(self.drift_indexes))
         print("Total number of drifts:", len(self.drift_indexes))
         print("Drift points:", self.drift_indexes)
-        cumulative_stream_drifts(len(stream), self.drift_indexes, f'output/visualization/drifts/{self.name}.pdf')
+        cumulative_stream_drifts(
+            len(stream), self.drift_indexes, f'output/visualization/drifts/{self.name}.pdf')

@@ -8,7 +8,7 @@ from cdesf2.clustering import DenStream
 from cdesf2.core import CDESF
 from cdesf2.data_structures import Case
 from cdesf2.utils import (extract_case_distances, initialize_graph,
-                          normalize_graph, read_csv)
+                          normalize_graph, read_csv, read_xes)
 
 
 class TestCdesf:
@@ -110,20 +110,24 @@ class TestCdesf:
         assert case_1.time_distance == 0
 
         process.cases = cases_list
-        process.process_model_graph = initialize_graph(nx.DiGraph(), process.cases)
+        process.process_model_graph = initialize_graph(
+            nx.DiGraph(), process.cases)
         process.initialize_case_metrics()
         case_3 = process.cases[0]
 
-        graph_dist_3, time_dist_3 = extract_case_distances(process.process_model_graph, case_3)
+        graph_dist_3, time_dist_3 = extract_case_distances(
+            process.process_model_graph, case_3)
         assert case_3.graph_distance == graph_dist_3
         assert case_3.time_distance == time_dist_3
 
-        graph_dist_2, time_dist_2 = extract_case_distances(process.process_model_graph, case_2)
+        graph_dist_2, time_dist_2 = extract_case_distances(
+            process.process_model_graph, case_2)
         case_2 = process.cases[1]
         assert case_2.graph_distance == graph_dist_2
         assert case_2.time_distance == time_dist_2
 
-        graph_dist_1, time_dist_1 = extract_case_distances(process.process_model_graph, case_1)
+        graph_dist_1, time_dist_1 = extract_case_distances(
+            process.process_model_graph, case_1)
         case_1 = process.cases[2]
         assert case_1.graph_distance == graph_dist_1
         assert case_1.time_distance == time_dist_1
@@ -201,7 +205,8 @@ class TestCdesf:
 
         process.cases = cases_list
         process.cases.insert(0, case4)
-        process.process_model_graph = initialize_graph(nx.DiGraph(), process.cases)
+        process.process_model_graph = initialize_graph(
+            nx.DiGraph(), process.cases)
         pmg = initialize_graph(nx.DiGraph(), cases_list)
         for case in cases_list:
             graph_distance, time_distance = extract_case_distances(pmg, case)
@@ -308,7 +313,8 @@ class TestCdesf:
         # self.cases > nyquist
         # nyquist = 1
         # process_model_graph = 1
-        process.process_model_graph = initialize_graph(nx.DiGraph(), [cases_list[2]])
+        process.process_model_graph = initialize_graph(
+            nx.DiGraph(), [cases_list[2]])
         pmg = process.process_model_graph
         assert pmg['activityA']['activityB']
         assert pmg['activityB']['activityC']
@@ -350,7 +356,8 @@ class TestCdesf:
         case2 = cases_list[1]
         case3 = cases_list[0]
 
-        process.process_model_graph = initialize_graph(nx.DiGraph(), [cases_list[1]])
+        process.process_model_graph = initialize_graph(
+            nx.DiGraph(), [cases_list[1]])
         pmg = process.process_model_graph
         assert pmg['activityA']['activityB']
         with pytest.raises(Exception):
@@ -392,7 +399,8 @@ class TestCdesf:
         case2 = cases_list[1]
         case3 = cases_list[0]
 
-        process.process_model_graph = initialize_graph(nx.DiGraph(), [cases_list[1], cases_list[2]])
+        process.process_model_graph = initialize_graph(
+            nx.DiGraph(), [cases_list[1], cases_list[2]])
         pmg = process.process_model_graph
         assert pmg['activityA']['activityB']
         assert pmg['activityB']['activityC']
@@ -436,7 +444,8 @@ class TestCdesf:
         assert process.check_point == datetime(2010, 1, 1)
         process.check_point = datetime(2015, 5, 10, 8, 22, 53)
 
-        process.process_event('1', 'activityA', datetime(2015, 5, 10, 8, 00, 00))
+        process.process_event(
+            '1', 'activityA', datetime(2015, 5, 10, 8, 00, 00))
         assert process.event_index == 0
         assert process.total_cases == {'1'}
 
@@ -450,15 +459,24 @@ class TestCdesf:
         assert process.check_point == datetime(2015, 5, 10, 8, 22, 53)
         assert not process.initialized
 
-        process.process_event('2', 'activityA', datetime(2015, 5, 10, 8, 00, 00))
-        process.process_event('1', 'activityB', datetime(2015, 5, 10, 8, 00, 10))
-        process.process_event('3', 'activityA', datetime(2015, 5, 10, 8, 00, 00))
-        process.process_event('3', 'activityB', datetime(2015, 5, 10, 8, 00, 10))
-        process.process_event('4', 'activityC', datetime(2015, 5, 10, 8, 00, 20))
-        process.process_event('3', 'activityC', datetime(2015, 5, 10, 8, 00, 20))
-        process.process_event('4', 'activityD', datetime(2015, 5, 10, 8, 00, 30))
-        process.process_event('5', 'activityA', datetime(2015, 5, 10, 8, 00, 00))
-        process.process_event('5', 'activityD', datetime(2015, 5, 10, 8, 00, 30))
+        process.process_event(
+            '2', 'activityA', datetime(2015, 5, 10, 8, 00, 00))
+        process.process_event(
+            '1', 'activityB', datetime(2015, 5, 10, 8, 00, 10))
+        process.process_event(
+            '3', 'activityA', datetime(2015, 5, 10, 8, 00, 00))
+        process.process_event(
+            '3', 'activityB', datetime(2015, 5, 10, 8, 00, 10))
+        process.process_event(
+            '4', 'activityC', datetime(2015, 5, 10, 8, 00, 20))
+        process.process_event(
+            '3', 'activityC', datetime(2015, 5, 10, 8, 00, 20))
+        process.process_event(
+            '4', 'activityD', datetime(2015, 5, 10, 8, 00, 30))
+        process.process_event(
+            '5', 'activityA', datetime(2015, 5, 10, 8, 00, 00))
+        process.process_event(
+            '5', 'activityD', datetime(2015, 5, 10, 8, 00, 30))
 
         assert process.check_point_cases == 5
         assert process.total_cases == {'1', '2', '3', '4', '5'}
@@ -475,24 +493,28 @@ class TestCdesf:
         assert process.check_point == datetime(2015, 5, 10, 8, 22, 53)
         assert not process.initialized
 
-        process.process_event('4', 'activityE', datetime(2015, 5, 10, 8, 00, 40))
+        process.process_event(
+            '4', 'activityE', datetime(2015, 5, 10, 8, 00, 40))
         assert process.check_point == datetime(2015, 5, 10, 8, 22, 53)
         assert process.check_point_cases == 5
         assert not process.initialized
 
-        process.process_event('4', 'activityE', datetime(2015, 5, 10, 21, 00, 40))
+        process.process_event(
+            '4', 'activityE', datetime(2015, 5, 10, 21, 00, 40))
         assert process.initialized
         assert process.check_point_cases == 5
         assert process.check_point == datetime(2015, 5, 10, 21, 00, 40)
         assert len(process.process_model_graph.nodes) == 5
-        #print(list(process.process_model_graph.edges(data=True)))
+        # print(list(process.process_model_graph.edges(data=True)))
         assert len(process.process_model_graph.edges) == 6
         assert len(process.denstream.p_micro_clusters) == 2
         assert len(process.denstream.o_micro_clusters) == 0
         assert process.nyquist == 10
 
-        process.process_event('1', 'activityC', datetime(2015, 5, 10, 21, 00, 50))
-        process.process_event('1', 'activityD', datetime(2015, 5, 10, 21, 50, 50))
+        process.process_event(
+            '1', 'activityC', datetime(2015, 5, 10, 21, 00, 50))
+        process.process_event(
+            '1', 'activityD', datetime(2015, 5, 10, 21, 50, 50))
         assert process.check_point_cases == 5
         assert process.total_cases == {'1', '2', '3', '4', '5'}
         assert process.denstream.all_cases.keys() == {'1', '2', '3', '4', '5'}
@@ -503,7 +525,8 @@ class TestCdesf:
         assert len(process.denstream.o_micro_clusters) == 2
         assert process.nyquist == 10
 
-        process.process_event('1', 'activityE', datetime(2015, 5, 10, 21, 50, 50))
+        process.process_event(
+            '1', 'activityE', datetime(2015, 5, 10, 21, 50, 50))
         assert process.check_point == datetime(2015, 5, 10, 21, 00, 40)
         assert process.check_point_cases == 5
         assert process.total_cases == {'1', '2', '3', '4', '5'}
@@ -515,16 +538,24 @@ class TestCdesf:
         assert len(process.denstream.o_micro_clusters) == 1
         assert process.nyquist == 10
 
-        process.process_event('6', 'activityA', datetime(2015, 5, 11, 10, 50, 50))
-        process.process_event('7', 'activityA', datetime(2015, 5, 11, 10, 50, 50))
-        process.process_event('8', 'activityA', datetime(2015, 5, 11, 10, 50, 50))
-        process.process_event('9', 'activityA', datetime(2015, 5, 11, 10, 50, 50))
-        process.process_event('10', 'activityA', datetime(2015, 5, 11, 10, 50, 50))
-        process.process_event('2', 'activityB', datetime(2015, 5, 12, 22, 50, 50))
-        process.process_event('2', 'activityB', datetime(2015, 5, 13, 22, 50, 50))
+        process.process_event(
+            '6', 'activityA', datetime(2015, 5, 11, 10, 50, 50))
+        process.process_event(
+            '7', 'activityA', datetime(2015, 5, 11, 10, 50, 50))
+        process.process_event(
+            '8', 'activityA', datetime(2015, 5, 11, 10, 50, 50))
+        process.process_event(
+            '9', 'activityA', datetime(2015, 5, 11, 10, 50, 50))
+        process.process_event(
+            '10', 'activityA', datetime(2015, 5, 11, 10, 50, 50))
+        process.process_event(
+            '2', 'activityB', datetime(2015, 5, 12, 22, 50, 50))
+        process.process_event(
+            '2', 'activityB', datetime(2015, 5, 13, 22, 50, 50))
 
         assert process.cp_count == 1
-        assert path.isfile(f'output/metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+        assert path.isfile(
+            f'output/metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
 
         assert process.check_point_cases == 0
         assert process.check_point == datetime(2015, 5, 13, 22, 50, 50)
@@ -538,33 +569,40 @@ class TestCdesf:
         assert process.nyquist == 10
         assert len(process.cases) == 10
 
-        process.process_event('11', 'activityB', datetime(2015, 5, 13, 23, 00, 00))
+        process.process_event(
+            '11', 'activityB', datetime(2015, 5, 13, 23, 00, 00))
         assert len(process.cases) == 11
         assert process.total_cases == {'1', '2', '3', '4', '5',
                                        '6', '7', '8', '9', '10', '11'}
         assert process.denstream.all_cases.keys() == {'1', '2', '3', '4', '5'}
         assert process.nyquist == 10
-        process.process_event('11', 'activityC', datetime(2015, 5, 14, 12, 00, 00))
+        process.process_event(
+            '11', 'activityC', datetime(2015, 5, 14, 12, 00, 00))
 
         assert process.cp_count == 2
-        assert path.isfile(f'output/metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+        assert path.isfile(
+            f'output/metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
 
         assert len(process.cases) == 10
         assert process.total_cases == {'1', '2', '3', '4', '5',
                                        '6', '7', '8', '9', '10', '11'}
-        assert process.denstream.all_cases.keys() == {'1', '2', '3', '4', '5', '11'}
+        assert process.denstream.all_cases.keys(
+        ) == {'1', '2', '3', '4', '5', '11'}
         assert process.nyquist == 10
 
-        process.process_event('11', 'activityE', datetime(2015, 5, 15, 1, 00, 00))
+        process.process_event(
+            '11', 'activityE', datetime(2015, 5, 15, 1, 00, 00))
         assert process.cp_count == 3
-        assert path.isfile(f'output/metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+        assert path.isfile(
+            f'output/metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
 
         assert len(process.cases) == 10
         assert process.cases[0].id == '11'
         assert process.cases[1].id == '2'
         assert process.total_cases == {'1', '2', '3', '4', '5',
                                        '6', '7', '8', '9', '10', '11'}
-        assert process.denstream.all_cases.keys() == {'1', '2', '3', '4', '5', '11'}
+        assert process.denstream.all_cases.keys(
+        ) == {'1', '2', '3', '4', '5', '11'}
         assert process.nyquist == 10
 
         assert len(process.process_model_graph.nodes) == 5
@@ -643,10 +681,17 @@ class TestCdesf:
     #     remove(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
 
     def test_run(self, process):
-        dir_path = 'demo'
-        filename = 'Detail_Supplier_IW-Frozen.csv'
-        stream = read_csv(f'{dir_path}/{filename}')
+        stream = read_csv('demo/Detail_Supplier_IW-Frozen.csv')
         process.run(stream)
 
         assert process.initialized
-        assert path.isfile(f'output/metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+        assert path.isfile(
+            f'output/metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
+
+    def test_run_xes(self, process):
+        stream = read_xes('demo/running-example.xes')
+        process.run(stream)
+
+        assert process.initialized
+        assert path.isfile(
+            f'output/metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
