@@ -34,6 +34,7 @@
 			"tests"
 		],
 		"python.testing.pytestEnabled": true,
+		"python.formatting.provider": "black"
 	},
 
 	// Add the IDs of extensions you want installed when the container is created.
