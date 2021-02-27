@@ -1,3 +1,5 @@
+from cdesf2.core.cdesf import CDESF
+from cdesf2.utils.reading import read_csv
 import shutil
 from os import path
 
@@ -43,3 +45,21 @@ def test_cummulative_stream_drifts():
     cumulative_stream_drifts(stream_length, drifts_index,
                              'output/test_cumulative_stream_drifts.pdf')
     assert path.isfile('output/test_cumulative_stream_drifts.pdf')
+
+
+def test_gen_plotting():
+    stream = read_csv("demo/Detail_Supplier_IW-Frozen_small.csv")
+    process = CDESF(
+        name="test",
+        time_horizon=43200,
+        lambda_=0.15,
+        beta=0.3,
+        epsilon=0.1,
+        mu=4,
+        stream_speed=1000,
+        n_features=2,
+        gen_plot=True,
+        gen_metrics=False,
+    )
+
+    process.run(stream)

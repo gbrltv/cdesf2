@@ -1,3 +1,4 @@
+import multiprocessing as mp
 from typing import Union
 from os import makedirs
 from datetime import datetime
@@ -83,6 +84,10 @@ class CDESF:
         self.drift_indexes = []
         self.metrics = Metrics(self.name)
         self.feature_space_plot_path = f'output/visualization/{self.name}_feature_space'
+
+        # Used to store the current feature_space jobs that are executing.
+        self.fs_pool = mp.Pool(mp.cpu_count())
+        
         makedirs(self.feature_space_plot_path, exist_ok=True)
 
     def get_case(self, case_id: str) -> Union[int, None]:
@@ -140,6 +145,10 @@ class CDESF:
             for cluster in group:
                 self.active_core_clusters.add(cluster.id)
 
+        # Computed outside mainly to ensure that the value of the clusters
+        # gets calculated sequentially and not inside the pool.
+        generated_o_clusters = self.denstream.generate_outlier_clusters()
+
         # plot
         if self.gen_plot:
             normals, outliers = [], []
@@ -148,15 +157,16 @@ class CDESF:
                     normals.append(case.point)
                 else:
                     outliers.append(case.point)
-            feature_space(self.name,
+
+            self.fs_pool.apply_async(func=feature_space, args=(self.name,
                           self.event_index,
                           self.cp_count,
                           normals,
                           outliers,
-                          self.denstream.generate_clusters(),
-                          self.denstream.generate_outlier_clusters(),
+                          groups,
+                          generated_o_clusters,
                           self.denstream.epsilon,
-                          self.feature_space_plot_path)
+                          self.feature_space_plot_path))
 
         # metrics
         if self.gen_metrics:
@@ -301,6 +311,11 @@ class CDESF:
             self.denstream.train(self.cases[case_index])
             self.check_for_drift()
 
+            # Computed outside mainly to ensure that the value of the clusters
+            # gets calculated sequentially and not inside the pool.
+            generated_clusters = self.denstream.generate_clusters()
+            generated_o_clusters = self.denstream.generate_outlier_clusters()
+
             # plots
             if self.gen_plot:
                 normals, outliers = [], []
@@ -309,15 +324,16 @@ class CDESF:
                         normals.append(case.point)
                     else:
                         outliers.append(case.point)
-                feature_space(self.name,
+
+                self.fs_pool.apply_async(func=feature_space, args=(self.name,
                               self.event_index,
                               self.cp_count,
                               normals,
                               outliers,
-                              self.denstream.generate_clusters(),
-                              self.denstream.generate_outlier_clusters(),
+                              generated_clusters,
+                              generated_o_clusters,
                               self.denstream.epsilon,
-                              self.feature_space_plot_path)
+                              self.feature_space_plot_path))
 
             # metrics
             if self.gen_metrics:
@@ -329,8 +345,8 @@ class CDESF:
                 self.metrics.compute_cluster_metrics(self.event_index,
                                                      act_timestamp,
                                                      self.cp_count,
-                                                     self.denstream.generate_clusters(),
-                                                     self.denstream.generate_outlier_clusters())
+                                                     generated_clusters,
+                                                     generated_o_clusters)
 
             if (current_time - self.check_point).total_seconds() > self.time_horizon:
                 """
@@ -363,6 +379,9 @@ class CDESF:
             if index == 0:
                 self.check_point = activity_timestamp
             self.process_event(case_id, activity_name, activity_timestamp)
+
+        self.fs_pool.close()
+        self.fs_pool.join()
 
         self.drift_indexes = list(np.unique(self.drift_indexes))
         print("Total number of drifts:", len(self.drift_indexes))
