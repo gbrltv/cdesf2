@@ -83,59 +83,59 @@ class TestDenstream:
             assert denstream.find_closest_mc(point, denstream.o_micro_clusters)
 
         micro_cluster = MicroCluster(0, 2, 0, 0.15)
-        micro_cluster.CF = np.array([0, 1])
+        micro_cluster.cf1 = np.array([0, 1])
         micro_cluster.weight = 2
         denstream.p_micro_clusters.append(micro_cluster)
 
         micro_cluster = MicroCluster(1, 2, 0, 0.15)
-        micro_cluster.CF = np.array([0, 1])
+        micro_cluster.cf1 = np.array([0, 1])
         micro_cluster.weight = 1
         denstream.p_micro_clusters.append(micro_cluster)
 
         i, mc, dist = denstream.find_closest_mc(point, denstream.p_micro_clusters)
         assert i == 0
-        assert np.all(mc.CF == [0, 1])
+        assert np.all(mc.cf1 == [0, 1])
         assert mc.weight == 2
         assert dist == 0.5
 
         point = np.array([0, 2])
         micro_cluster = MicroCluster(2, 2, 1, 0.15)
-        micro_cluster.CF = np.array([0, 1])
+        micro_cluster.cf1 = np.array([0, 1])
         micro_cluster.weight = 2
         denstream.p_micro_clusters = []
         denstream.p_micro_clusters.append(micro_cluster)
 
         micro_cluster = MicroCluster(3, 2, 1, 0.15)
-        micro_cluster.CF = np.array([0, 1])
+        micro_cluster.cf1 = np.array([0, 1])
         micro_cluster.weight = 1
         denstream.p_micro_clusters.append(micro_cluster)
 
         i, mc, dist = denstream.find_closest_mc(point, denstream.p_micro_clusters)
         assert i == 1
-        assert np.all(mc.CF == [0, 1])
+        assert np.all(mc.cf1 == [0, 1])
         assert mc.weight == 1
         assert dist == 1
 
         micro_cluster = MicroCluster(4, 2, 1, 0.15)
-        micro_cluster.CF = np.array([0, 3])
+        micro_cluster.cf1 = np.array([0, 3])
         micro_cluster.weight = 2
         denstream.o_micro_clusters = []
         denstream.o_micro_clusters.append(micro_cluster)
 
         micro_cluster = MicroCluster(5, 2, 1, 0.15)
-        micro_cluster.CF = np.array([0, 1])
+        micro_cluster.cf1 = np.array([0, 1])
         micro_cluster.weight = 3
         denstream.o_micro_clusters.append(micro_cluster)
 
         micro_cluster = MicroCluster(6, 2, 1, 0.15)
-        micro_cluster.CF = np.array([0, 2])
+        micro_cluster.cf1 = np.array([0, 2])
         micro_cluster.weight = 1
         denstream.o_micro_clusters.append(micro_cluster)
 
         point = np.array([0, 3])
         i, mc, dist = denstream.find_closest_mc(point, denstream.o_micro_clusters)
         assert i == 2
-        assert np.all(mc.CF == [0, 2])
+        assert np.all(mc.cf1 == [0, 2])
         assert mc.weight == 1
 
     def test_add_point(self, denstream):
@@ -165,14 +165,14 @@ class TestDenstream:
         case_3.time_distance = time_distance
 
         micro_cluster = MicroCluster(10, 2, 0, 0.15)
-        micro_cluster.CF = np.array([0.5, -0.5])
-        micro_cluster.CF2 = np.array([0.5, -0.1])
+        micro_cluster.cf1 = np.array([0.5, -0.5])
+        micro_cluster.cf2 = np.array([0.5, -0.1])
         micro_cluster.weight = 10
         denstream.p_micro_clusters.append(micro_cluster)
 
         micro_cluster = MicroCluster(11, 2, 0, 0.15)
-        micro_cluster.CF = np.array([0.0, 0.0])
-        micro_cluster.CF2 = np.array([0.0, 0.0])
+        micro_cluster.cf1 = np.array([0.0, 0.0])
+        micro_cluster.cf2 = np.array([0.0, 0.0])
         micro_cluster.weight = 5
         denstream.o_micro_clusters.append(micro_cluster)
         denstream.mc_id = 2
@@ -182,49 +182,49 @@ class TestDenstream:
         assert len(denstream.o_micro_clusters) == 2
         assert denstream.o_micro_clusters[1].radius == 0
         assert denstream.o_micro_clusters[1].weight == 1
-        assert np.all(denstream.o_micro_clusters[1].CF == case_3.point)
-        assert np.all(denstream.o_micro_clusters[1].CF2 == case_3.point * case_3.point)
+        assert np.all(denstream.o_micro_clusters[1].cf1 == case_3.point)
+        assert np.all(denstream.o_micro_clusters[1].cf2 == case_3.point * case_3.point)
 
-        cf = denstream.o_micro_clusters[1].CF.copy()
-        cf2 = denstream.o_micro_clusters[1].CF2.copy()
+        cf = denstream.o_micro_clusters[1].cf1.copy()
+        cf2 = denstream.o_micro_clusters[1].cf2.copy()
         mc_id = denstream.add_point(case_3)
         assert mc_id == 2
         assert len(denstream.o_micro_clusters) == 1
         assert len(denstream.p_micro_clusters) == 2
         assert denstream.p_micro_clusters[1].weight == 2
-        assert np.all(denstream.p_micro_clusters[1].CF == cf + case_3.point)
-        assert np.all(denstream.p_micro_clusters[1].CF2 == cf2 + case_3.point * case_3.point)
+        assert np.all(denstream.p_micro_clusters[1].cf1 == cf + case_3.point)
+        assert np.all(denstream.p_micro_clusters[1].cf2 == cf2 + case_3.point * case_3.point)
 
     def test_decay_micro_clusters(self, denstream):
         micro_cluster = MicroCluster(0, 2, 0, 0.15)
-        micro_cluster.CF = np.array([5.0, 5.0])
-        micro_cluster.CF2 = np.array([1.0, 1.0])
+        micro_cluster.cf1 = np.array([5.0, 5.0])
+        micro_cluster.cf2 = np.array([1.0, 1.0])
         micro_cluster.weight = 5
         denstream.p_micro_clusters.append(micro_cluster)
 
         micro_cluster = MicroCluster(1, 2, 0, 0.15)
-        micro_cluster.CF = np.array([1.0, 5.0])
-        micro_cluster.CF2 = np.array([3.0, 0.0])
+        micro_cluster.cf1 = np.array([1.0, 5.0])
+        micro_cluster.cf2 = np.array([3.0, 0.0])
         micro_cluster.weight = 10
         denstream.p_micro_clusters.append(micro_cluster)
 
         micro_cluster = MicroCluster(2, 2, 0, 0.15)
-        micro_cluster.CF = np.array([0.0, 0.0])
-        micro_cluster.CF2 = np.array([10.0, 2.0])
+        micro_cluster.cf1 = np.array([0.0, 0.0])
+        micro_cluster.cf2 = np.array([10.0, 2.0])
         micro_cluster.weight = 3
         denstream.p_micro_clusters.append(micro_cluster)
 
         denstream.decay_micro_clusters(0)
-        assert np.all(denstream.p_micro_clusters[0].CF == np.array([5, 5]))
-        assert np.all(denstream.p_micro_clusters[0].CF2 == np.array([1, 1]))
+        assert np.all(denstream.p_micro_clusters[0].cf1 == np.array([5, 5]))
+        assert np.all(denstream.p_micro_clusters[0].cf2 == np.array([1, 1]))
         assert np.all(denstream.p_micro_clusters[0].weight == 5)
 
-        assert np.all(denstream.p_micro_clusters[1].CF == np.array([1, 5]) * 2 ** (-0.15))
-        assert np.all(denstream.p_micro_clusters[1].CF2 == np.array([3, 0]) * 2 ** (-0.15))
+        assert np.all(denstream.p_micro_clusters[1].cf1 == np.array([1, 5]) * 2 ** (-0.15))
+        assert np.all(denstream.p_micro_clusters[1].cf2 == np.array([3, 0]) * 2 ** (-0.15))
         assert np.all(denstream.p_micro_clusters[1].weight == 10 * 2 ** (-0.15))
 
-        assert np.all(denstream.p_micro_clusters[2].CF == np.array([0, 0]) * 2 ** (-0.15))
-        assert np.all(denstream.p_micro_clusters[2].CF2 == np.array([10, 2]) * 2 ** (-0.15))
+        assert np.all(denstream.p_micro_clusters[2].cf1 == np.array([0, 0]) * 2 ** (-0.15))
+        assert np.all(denstream.p_micro_clusters[2].cf2 == np.array([10, 2]) * 2 ** (-0.15))
         assert np.all(denstream.p_micro_clusters[2].weight == 3 * 2 ** (-0.15))
 
     def test_dbscan(self, denstream, cases_list):
@@ -303,14 +303,14 @@ class TestDenstream:
         assert len(denstream.o_micro_clusters) == 1
 
         assert denstream.p_micro_clusters[0].id == 0
-        assert np.all(denstream.p_micro_clusters[0].CF == [0.25, 0])
-        assert np.all(denstream.p_micro_clusters[0].CF2 == [0.03125, 0])
+        assert np.all(denstream.p_micro_clusters[0].cf1 == [0.25, 0])
+        assert np.all(denstream.p_micro_clusters[0].cf2 == [0.03125, 0])
         assert denstream.p_micro_clusters[0].weight == 2
         assert denstream.p_micro_clusters[0].creation_time == 0
 
         assert denstream.o_micro_clusters[0].id == 1
-        assert np.all(denstream.o_micro_clusters[0].CF == [(5/8), 0])
-        assert np.all(denstream.o_micro_clusters[0].CF2 == [(5/8)**2, 0])
+        assert np.all(denstream.o_micro_clusters[0].cf1 == [(5/8), 0])
+        assert np.all(denstream.o_micro_clusters[0].cf2 == [(5/8)**2, 0])
         assert denstream.o_micro_clusters[0].weight == 1
         assert denstream.o_micro_clusters[0].creation_time == 0
 
@@ -323,14 +323,14 @@ class TestDenstream:
         assert len(denstream.o_micro_clusters) == 1
 
         assert denstream.p_micro_clusters[0].id == 0
-        assert np.all(denstream.p_micro_clusters[0].CF == [0.5, 0])
-        assert np.all(denstream.p_micro_clusters[0].CF2 == [0.09375, 0])
+        assert np.all(denstream.p_micro_clusters[0].cf1 == [0.5, 0])
+        assert np.all(denstream.p_micro_clusters[0].cf2 == [0.09375, 0])
         assert denstream.p_micro_clusters[0].weight == 3
         assert denstream.p_micro_clusters[0].creation_time == 0
 
         assert denstream.o_micro_clusters[0].id == 1
-        assert np.all(denstream.o_micro_clusters[0].CF == [(5/8), 0])
-        assert np.all(denstream.o_micro_clusters[0].CF2 == [(5/8)**2, 0])
+        assert np.all(denstream.o_micro_clusters[0].cf1 == [(5/8), 0])
+        assert np.all(denstream.o_micro_clusters[0].cf2 == [(5/8)**2, 0])
         assert denstream.o_micro_clusters[0].weight == 1
         assert denstream.o_micro_clusters[0].creation_time == 0
 
@@ -343,13 +343,13 @@ class TestDenstream:
         assert len(denstream.p_micro_clusters) == 1
 
         assert denstream.p_micro_clusters[0].id == 0
-        assert np.all(denstream.p_micro_clusters[0].CF == [(5/8), 0])
-        assert np.all(denstream.p_micro_clusters[0].CF2 == [(7/64), 0])
+        assert np.all(denstream.p_micro_clusters[0].cf1 == [(5/8), 0])
+        assert np.all(denstream.p_micro_clusters[0].cf2 == [(7/64), 0])
         assert denstream.p_micro_clusters[0].weight == 4
 
         assert denstream.o_micro_clusters[0].id == 1
-        assert np.all(denstream.o_micro_clusters[0].CF == [(5/8), 0])
-        assert np.all(denstream.o_micro_clusters[0].CF2 == [(5/8)**2, 0])
+        assert np.all(denstream.o_micro_clusters[0].cf1 == [(5/8), 0])
+        assert np.all(denstream.o_micro_clusters[0].cf2 == [(5/8)**2, 0])
         assert denstream.o_micro_clusters[0].weight == 1
         assert denstream.o_micro_clusters[0].creation_time == 0
 
@@ -362,13 +362,13 @@ class TestDenstream:
         assert len(denstream.p_micro_clusters) == 1
 
         assert denstream.p_micro_clusters[0].id == 0
-        assert np.all(denstream.p_micro_clusters[0].CF == [0.75, 0])
-        assert np.all(denstream.p_micro_clusters[0].CF2 == [0.125, 0])
+        assert np.all(denstream.p_micro_clusters[0].cf1 == [0.75, 0])
+        assert np.all(denstream.p_micro_clusters[0].cf2 == [0.125, 0])
         assert denstream.p_micro_clusters[0].weight == 5
 
         assert denstream.o_micro_clusters[0].id == 1
-        assert np.all(denstream.o_micro_clusters[0].CF == [(5/8), 0])
-        assert np.all(denstream.o_micro_clusters[0].CF2 == [(5/8)**2, 0])
+        assert np.all(denstream.o_micro_clusters[0].cf1 == [(5/8), 0])
+        assert np.all(denstream.o_micro_clusters[0].cf2 == [(5/8)**2, 0])
         assert denstream.o_micro_clusters[0].weight == 1
         assert denstream.o_micro_clusters[0].creation_time == 0
 
@@ -381,13 +381,13 @@ class TestDenstream:
         assert len(denstream.p_micro_clusters) == 1
 
         assert denstream.p_micro_clusters[0].id == 0
-        assert np.all(denstream.p_micro_clusters[0].CF == [0.75, 0])
-        assert np.all(denstream.p_micro_clusters[0].CF2 == [0.125, 0])
+        assert np.all(denstream.p_micro_clusters[0].cf1 == [0.75, 0])
+        assert np.all(denstream.p_micro_clusters[0].cf2 == [0.125, 0])
         assert denstream.p_micro_clusters[0].weight == 6
 
         assert denstream.o_micro_clusters[0].id == 1
-        assert np.all(denstream.o_micro_clusters[0].CF == [(5/8), 0])
-        assert np.all(denstream.o_micro_clusters[0].CF2 == [(5/8)**2, 0])
+        assert np.all(denstream.o_micro_clusters[0].cf1 == [(5/8), 0])
+        assert np.all(denstream.o_micro_clusters[0].cf2 == [(5/8)**2, 0])
         assert denstream.o_micro_clusters[0].weight == 1
         assert denstream.o_micro_clusters[0].creation_time == 0
 
@@ -408,19 +408,19 @@ class TestDenstream:
         assert len(denstream.p_micro_clusters) == 1
 
         assert denstream.p_micro_clusters[0].id == 0
-        assert np.all(denstream.p_micro_clusters[0].CF == [0.75, 0])
-        assert np.all(denstream.p_micro_clusters[0].CF2 == [0.125, 0])
+        assert np.all(denstream.p_micro_clusters[0].cf1 == [0.75, 0])
+        assert np.all(denstream.p_micro_clusters[0].cf2 == [0.125, 0])
         assert denstream.p_micro_clusters[0].weight == 6
 
         assert denstream.o_micro_clusters[0].id == 1
-        assert np.all(denstream.o_micro_clusters[0].CF == [(5/8), 0])
-        assert np.all(denstream.o_micro_clusters[0].CF2 == [(5/8)**2, 0])
+        assert np.all(denstream.o_micro_clusters[0].cf1 == [(5/8), 0])
+        assert np.all(denstream.o_micro_clusters[0].cf2 == [(5/8)**2, 0])
         assert denstream.o_micro_clusters[0].weight == 1
         assert denstream.o_micro_clusters[0].creation_time == 0
 
         assert denstream.o_micro_clusters[1].id == 2
-        assert np.all(denstream.o_micro_clusters[1].CF == [1, 1])
-        assert np.all(denstream.o_micro_clusters[1].CF2 == [1, 1])
+        assert np.all(denstream.o_micro_clusters[1].cf1 == [1, 1])
+        assert np.all(denstream.o_micro_clusters[1].cf2 == [1, 1])
         assert denstream.o_micro_clusters[1].weight == 1
         assert denstream.o_micro_clusters[1].creation_time == 0
         assert denstream.all_cases == {'1': 0, '2': 0, '3': 0, '4': 0, '5': 1, '6': 2}
@@ -435,8 +435,8 @@ class TestDenstream:
         weight = 6 * (2 ** (-0.15))
 
         assert denstream.p_micro_clusters[0].id == 0
-        assert np.all(denstream.p_micro_clusters[0].CF == CF)
-        assert np.all(denstream.p_micro_clusters[0].CF2 == CF2)
+        assert np.all(denstream.p_micro_clusters[0].cf1 == CF)
+        assert np.all(denstream.p_micro_clusters[0].cf2 == CF2)
         assert denstream.p_micro_clusters[0].weight == weight
 
         CF = (np.array([1, 1]) + cases_list[0].point) * (2 ** (-0.15))
@@ -444,8 +444,8 @@ class TestDenstream:
         weight = (1 + 1) * (2 ** (-0.15))
 
         assert denstream.p_micro_clusters[1].id == 2
-        assert np.all(denstream.p_micro_clusters[1].CF == CF)
-        assert np.all(denstream.p_micro_clusters[1].CF2 == CF2)
+        assert np.all(denstream.p_micro_clusters[1].cf1 == CF)
+        assert np.all(denstream.p_micro_clusters[1].cf2 == CF2)
         assert denstream.p_micro_clusters[1].weight == weight
 
         for i in range(16):
@@ -462,8 +462,8 @@ class TestDenstream:
                 CF *= (2 ** (-0.15))
                 CF2 *= (2 ** (-0.15))
                 weight *= (2 ** (-0.15))
-            assert np.all(denstream.p_micro_clusters[0].CF == CF)
-            assert np.all(denstream.p_micro_clusters[0].CF2 == CF2)
+            assert np.all(denstream.p_micro_clusters[0].cf1 == CF)
+            assert np.all(denstream.p_micro_clusters[0].cf2 == CF2)
             assert denstream.p_micro_clusters[0].weight == weight
 
             assert denstream.p_micro_clusters[1].id == 2
@@ -477,8 +477,8 @@ class TestDenstream:
                 CF2_1 *= (2 ** (-0.15))
                 weight_1 += 1
                 weight_1 *= (2 ** (-0.15))
-            assert np.all(denstream.p_micro_clusters[1].CF == CF_1)
-            assert np.all(denstream.p_micro_clusters[1].CF2 == CF2_1)
+            assert np.all(denstream.p_micro_clusters[1].cf1 == CF_1)
+            assert np.all(denstream.p_micro_clusters[1].cf2 == CF2_1)
             assert denstream.p_micro_clusters[1].weight == weight_1
 
         assert len(denstream.o_micro_clusters) == 1
@@ -506,13 +506,13 @@ class TestDenstream:
         CF_1 *= (2 ** (-0.15))
         CF2_1 *= (2 ** (-0.15))
         weight_1 *= (2 ** (-0.15))
-        assert np.all(denstream.p_micro_clusters[0].CF == CF_1)
-        assert np.all(denstream.p_micro_clusters[0].CF2 == CF2_1)
+        assert np.all(denstream.p_micro_clusters[0].cf1 == CF_1)
+        assert np.all(denstream.p_micro_clusters[0].cf2 == CF2_1)
         assert denstream.p_micro_clusters[0].weight == weight_1
 
         assert denstream.o_micro_clusters[0].id == 3
-        assert np.all(denstream.o_micro_clusters[0].CF == [1, log10(60)])
-        assert np.all(denstream.o_micro_clusters[0].CF2 == [1, log10(60)**2])
+        assert np.all(denstream.o_micro_clusters[0].cf1 == [1, log10(60)])
+        assert np.all(denstream.o_micro_clusters[0].cf2 == [1, log10(60)**2])
         assert denstream.o_micro_clusters[0].weight == 1
 
     def test_generate_clusters(self, denstream):
@@ -526,8 +526,8 @@ class TestDenstream:
         case_1 = Case('1')
 
         micro_cluster = MicroCluster(0, 2, 0, 0.15)
-        micro_cluster.CF = np.array([5.0, 5.0])
-        micro_cluster.CF2 = np.array([1.0, 1.0])
+        micro_cluster.cf1 = np.array([5.0, 5.0])
+        micro_cluster.cf2 = np.array([1.0, 1.0])
         micro_cluster.weight = 5
         denstream.p_micro_clusters.append(micro_cluster)
         denstream.all_cases[case_0.id] = micro_cluster.id
@@ -549,8 +549,8 @@ class TestDenstream:
         assert cluster.case_ids == ['0', '1']
 
         micro_cluster = MicroCluster(0, 2, 0, 0.15)
-        micro_cluster.CF = np.array([3.0, 3.0])
-        micro_cluster.CF2 = np.array([1.0, 1.0])
+        micro_cluster.cf1 = np.array([3.0, 3.0])
+        micro_cluster.cf2 = np.array([1.0, 1.0])
         micro_cluster.weight = 3
         denstream.p_micro_clusters = []
         denstream.p_micro_clusters.append(micro_cluster)
@@ -576,8 +576,8 @@ class TestDenstream:
         case_3 = Case('3')
 
         micro_cluster = MicroCluster(0, 2, 0, 0.15)
-        micro_cluster.CF = np.array([3.0, 3.0])
-        micro_cluster.CF2 = np.array([1.0, 1.0])
+        micro_cluster.cf1 = np.array([3.0, 3.0])
+        micro_cluster.cf2 = np.array([1.0, 1.0])
         micro_cluster.weight = 3
         denstream.p_micro_clusters = []
         denstream.p_micro_clusters.append(micro_cluster)
@@ -585,8 +585,8 @@ class TestDenstream:
         denstream.all_cases[case_1.id] = micro_cluster.id
 
         micro_cluster = MicroCluster(1, 2, 0, 0.15)
-        micro_cluster.CF = np.array([4.0, 4.0])
-        micro_cluster.CF2 = np.array([1.0, 1.0])
+        micro_cluster.cf1 = np.array([4.0, 4.0])
+        micro_cluster.cf2 = np.array([1.0, 1.0])
         micro_cluster.weight = 4
         denstream.p_micro_clusters.append(micro_cluster)
         denstream.all_cases[case_2.id] = micro_cluster.id
@@ -622,8 +622,8 @@ class TestDenstream:
             assert cluster_list[2]
 
         micro_cluster = MicroCluster(0, 2, 0, 0.15)
-        micro_cluster.CF = np.array([3.0, 3.0])
-        micro_cluster.CF2 = np.array([1.0, 1.0])
+        micro_cluster.cf1 = np.array([3.0, 3.0])
+        micro_cluster.cf2 = np.array([1.0, 1.0])
         micro_cluster.weight = 1
         denstream.p_micro_clusters = []
         denstream.p_micro_clusters.append(micro_cluster)
@@ -631,8 +631,8 @@ class TestDenstream:
         denstream.all_cases[case_1.id] = micro_cluster.id
 
         micro_cluster = MicroCluster(1, 2, 0, 0.15)
-        micro_cluster.CF = np.array([3.0, 3.0])
-        micro_cluster.CF2 = np.array([1.0, 1.0])
+        micro_cluster.cf1 = np.array([3.0, 3.0])
+        micro_cluster.cf2 = np.array([1.0, 1.0])
         micro_cluster.weight = 1
         denstream.p_micro_clusters.append(micro_cluster)
         denstream.all_cases[case_2.id] = micro_cluster.id
@@ -668,8 +668,8 @@ class TestDenstream:
             assert cluster_list[2]
 
         micro_cluster = MicroCluster(0, 2, 0, 0.15)
-        micro_cluster.CF = np.array([3.0, 3.0])
-        micro_cluster.CF2 = np.array([1.0, 1.0])
+        micro_cluster.cf1 = np.array([3.0, 3.0])
+        micro_cluster.cf2 = np.array([1.0, 1.0])
         micro_cluster.weight = 3
         denstream.p_micro_clusters = []
         denstream.p_micro_clusters.append(micro_cluster)
@@ -677,8 +677,8 @@ class TestDenstream:
         denstream.all_cases[case_1.id] = micro_cluster.id
 
         micro_cluster = MicroCluster(1, 2, 0, 0.15)
-        micro_cluster.CF = np.array([1.0, 1.0])
-        micro_cluster.CF2 = np.array([1.0, 1.0])
+        micro_cluster.cf1 = np.array([1.0, 1.0])
+        micro_cluster.cf2 = np.array([1.0, 1.0])
         micro_cluster.weight = 4
         denstream.p_micro_clusters.append(micro_cluster)
         denstream.all_cases[case_2.id] = micro_cluster.id
@@ -719,8 +719,8 @@ class TestDenstream:
             assert cluster_list[1]
 
         micro_cluster = MicroCluster(0, 2, 0, 0.15)
-        micro_cluster.CF = np.array([6.0, 6.0])
-        micro_cluster.CF2 = np.array([1.0, 1.0])
+        micro_cluster.cf1 = np.array([6.0, 6.0])
+        micro_cluster.cf2 = np.array([1.0, 1.0])
         micro_cluster.weight = 6
         denstream.p_micro_clusters = []
         denstream.p_micro_clusters.append(micro_cluster)
@@ -728,8 +728,8 @@ class TestDenstream:
         denstream.all_cases[case_1.id] = micro_cluster.id
 
         micro_cluster = MicroCluster(1, 2, 0, 0.15)
-        micro_cluster.CF = np.array([1.0, 1.0])
-        micro_cluster.CF2 = np.array([1.0, 1.0])
+        micro_cluster.cf1 = np.array([1.0, 1.0])
+        micro_cluster.cf2 = np.array([1.0, 1.0])
         micro_cluster.weight = 2
         denstream.p_micro_clusters.append(micro_cluster)
         denstream.all_cases[case_2.id] = micro_cluster.id
@@ -770,8 +770,8 @@ class TestDenstream:
             assert cluster_list[1]
 
         micro_cluster = MicroCluster(0, 2, 0, 0.15)
-        micro_cluster.CF = np.array([6.0, 6.0])
-        micro_cluster.CF2 = np.array([1.0, 1.0])
+        micro_cluster.cf1 = np.array([6.0, 6.0])
+        micro_cluster.cf2 = np.array([1.0, 1.0])
         micro_cluster.weight = 6
         denstream.p_micro_clusters = []
         denstream.p_micro_clusters.append(micro_cluster)
@@ -779,8 +779,8 @@ class TestDenstream:
         denstream.all_cases[case_1.id] = micro_cluster.id
 
         micro_cluster = MicroCluster(1, 2, 0, 0.15)
-        micro_cluster.CF = np.array([1.0, 1.0])
-        micro_cluster.CF2 = np.array([1.0, 1.0])
+        micro_cluster.cf1 = np.array([1.0, 1.0])
+        micro_cluster.cf2 = np.array([1.0, 1.0])
         micro_cluster.weight = 4
         denstream.p_micro_clusters.append(micro_cluster)
         denstream.all_cases[case_2.id] = micro_cluster.id
@@ -820,8 +820,8 @@ class TestDenstream:
             assert cluster_list[1]
 
         micro_cluster = MicroCluster(0, 2, 0, 0.15)
-        micro_cluster.CF = np.array([1.0, 1.0])
-        micro_cluster.CF2 = np.array([1.0, 1.0])
+        micro_cluster.cf1 = np.array([1.0, 1.0])
+        micro_cluster.cf2 = np.array([1.0, 1.0])
         micro_cluster.weight = 3
         denstream.p_micro_clusters = []
         denstream.p_micro_clusters.append(micro_cluster)
@@ -829,8 +829,8 @@ class TestDenstream:
         denstream.all_cases[case_1.id] = micro_cluster.id
 
         micro_cluster = MicroCluster(1, 2, 0, 0.15)
-        micro_cluster.CF = np.array([1.0, 1.0])
-        micro_cluster.CF2 = np.array([1.0, 1.0])
+        micro_cluster.cf1 = np.array([1.0, 1.0])
+        micro_cluster.cf2 = np.array([1.0, 1.0])
         micro_cluster.weight = 2
         denstream.p_micro_clusters.append(micro_cluster)
         denstream.all_cases[case_2.id] = micro_cluster.id
