@@ -8,7 +8,7 @@ from ..utils import extract_case_distances, initialize_graph, merge_graphs, Metr
 from ..data_structures import Case
 from ..clustering import DenStream
 from ..visualization import cumulative_stream_drifts, feature_space
-from pm4py.objects.log import log
+from pm4py.objects.log import obj
 
 
 class CDESF:
@@ -18,17 +18,21 @@ class CDESF:
     DenStream triggering, plotting results and metrics recording.
     """
 
-    def __init__(self,
-                 name: str = 'Process',
-                 time_horizon: int = 432000,
-                 lambda_: float = 0.1,
-                 beta: float = 0.2,
-                 epsilon: float = 0.2,
-                 mu: int = 4,
-                 stream_speed: int = 100,
-                 n_features: int = 2,
-                 gen_plot: bool = False,
-                 gen_metrics: bool = True):
+    cases: "list[Case]"
+
+    def __init__(
+        self,
+        name: str = "Process",
+        time_horizon: int = 432000,
+        lambda_: float = 0.1,
+        beta: float = 0.2,
+        epsilon: float = 0.2,
+        mu: int = 4,
+        stream_speed: int = 100,
+        n_features: int = 2,
+        gen_plot: bool = False,
+        gen_metrics: bool = True,
+    ):
         """
         This function sets up a new process, defining its name, and preparing initial attributes.
 
@@ -75,17 +79,16 @@ class CDESF:
         self.nyquist = 0
         self.check_point_cases = 0
         self.process_model_graph = nx.DiGraph()
-        self.denstream = DenStream(
-            lambda_, beta, epsilon, mu, stream_speed, n_features)
+        self.denstream = DenStream(lambda_, beta, epsilon, mu, stream_speed, n_features)
         self.cluster_metrics = []
         self.case_metrics = []
         self.active_core_clusters = set()
         self.drift_indexes = []
         self.metrics = Metrics(self.name)
-        self.feature_space_plot_path = f'output/visualization/{self.name}_feature_space'
+        self.feature_space_plot_path = f"output/visualization/{self.name}_feature_space"
         makedirs(self.feature_space_plot_path, exist_ok=True)
 
-    def get_case(self, case_id: str) -> Union[int, None]:
+    def get_case_index(self, case_id: str) -> Union[int, None]:
         """
         Returns the case index from the cases list.
 
@@ -93,6 +96,7 @@ class CDESF:
         --------------------------------------
         case_id: str
             The case identifier
+
         Returns
         --------------------------------------
         The case position in the case list
@@ -109,17 +113,14 @@ class CDESF:
         Initializes metrics in case the user triggers this task
         """
         for case in self.cases:
-            graph_distance, time_distance = extract_case_distances(
-                self.process_model_graph, case)
-            case.graph_distance = graph_distance
-            case.time_distance = time_distance
+            case.distances = extract_case_distances(self.process_model_graph, case)
 
     def release_cases_from_memory(self) -> None:
         """
         Releases older cases based on the Nyquist value.
         The result is stored in self.cases.
         """
-        self.cases = self.cases[:self.nyquist]
+        self.cases = self.cases[: self.nyquist]
 
     def initialize_cdesf(self) -> None:
         """
@@ -144,38 +145,52 @@ class CDESF:
         if self.gen_plot:
             normals, outliers = [], []
             for case in self.cases:
-                if not np.isnan(np.sum(case.point)) and self.denstream.is_normal(case.point):
+                if not np.isnan(np.sum(case.point)) and self.denstream.is_normal(
+                    case.point
+                ):
                     normals.append(case.point)
                 else:
                     outliers.append(case.point)
-            feature_space(self.name,
-                          self.event_index,
-                          self.cp_count,
-                          normals,
-                          outliers,
-                          self.denstream.generate_clusters(),
-                          self.denstream.generate_outlier_clusters(),
-                          self.denstream.epsilon,
-                          self.feature_space_plot_path)
+            feature_space(
+                self.name,
+                self.event_index,
+                self.cp_count,
+                normals,
+                outliers,
+                self.denstream.generate_clusters(),
+                self.denstream.generate_outlier_clusters(),
+                self.denstream.epsilon,
+                self.feature_space_plot_path,
+            )
 
         # metrics
         if self.gen_metrics:
             for case in self.cases:
-                self.metrics.compute_case_metrics(self.event_index, self.check_point, self.cp_count,
-                                                  case, self.denstream.is_normal(case.point))
+                self.metrics.compute_case_metrics(
+                    self.event_index,
+                    self.check_point,
+                    self.cp_count,
+                    case,
+                    self.denstream.is_normal(case.point),
+                )
             self.metrics.save_case_metrics_on_check_point()
-            self.metrics.compute_cluster_metrics(self.event_index, self.check_point, self.cp_count,
-                                                 self.denstream.generate_clusters(),
-                                                 self.denstream.generate_outlier_clusters())
+            self.metrics.compute_cluster_metrics(
+                self.event_index,
+                self.check_point,
+                self.cp_count,
+                self.denstream.generate_clusters(),
+                self.denstream.generate_outlier_clusters(),
+            )
             self.metrics.save_cluster_metrics_on_check_point()
 
         if len(self.process_model_graph.edges) > 0:
             self.metrics.save_pmg_on_check_point(
-                self.process_model_graph, self.cp_count)
+                self.process_model_graph, self.cp_count
+            )
 
         self.initialized = True
 
-    def set_case(self, case_id: str, act_name: str, act_timestamp: datetime) -> int:
+    def set_case(self, case_id: str, event) -> int:
         """
         Function that finds the case and if it already exists,
         sets the activity with the name and the timestamp passed and
@@ -196,18 +211,20 @@ class CDESF:
         index: int
             Index of the case modified/created
         """
-        # check if case exists and creates one if it doesn't
-        index = self.get_case(case_id)
-        if index is None:
-            self.cases.append(Case(case_id))
-            self.check_point_cases += 1
-            index = self.get_case(case_id)
-        # add activity
-        self.cases[index].set_activity(act_name, act_timestamp)
-        # reorder list, putting the newest case in the first position
-        self.cases.insert(0, self.cases.pop(index))
+        case_index = self.get_case_index(case_id)
 
-        return index
+        if case_index is None:
+            new_case = Case(case_id)
+            self.cases.append(new_case)
+            self.check_point_cases += 1
+            case_index = len(self.cases) - 1
+
+        self.cases[case_index].add_event(event)
+
+        # reorder list, putting the newest case in the first position
+        self.cases.insert(0, self.cases.pop(case_index))
+
+        return case_index
 
     def check_point_update(self):
         """
@@ -226,7 +243,8 @@ class CDESF:
 
             check_point_graph = initialize_graph(nx.DiGraph(), self.cases)
             self.process_model_graph = merge_graphs(
-                self.process_model_graph, check_point_graph)
+                self.process_model_graph, check_point_graph
+            )
 
         self.check_point_cases = 0
 
@@ -260,112 +278,167 @@ class CDESF:
         #     print("Cluster", cluster, "ceased to exist")
         #     print()
 
-    def process_event(self, case_id: str, act_name: str, act_timestamp: datetime) -> None:
-        """
-        The core function in the Process class.
-        Sets a new case and controls the check point.
-        If gp_creation is True, calculates the case metrics and uses
-        them to train DenStream, recalculates the Nyquist and releases
-        old cases if necessary.
+    def process_event(self, event):
+        case_id = event["case:concept:name"]
+        case_index = self.set_case(case_id, event)
+        case = self.cases[case_index]
 
-        Parameters
-        --------------------------------------
-        case_id: str
-            The case identifier
-        act_name: str
-            Activity's name
-        act_timestamp: datetime
-            Activity timestamp
-        """
         self.total_cases.add(case_id)
 
-        case_index = self.set_case(case_id, act_name, act_timestamp)
-        current_time = self.cases[case_index].last_time
+        current_time = case.last_time
+        time_distance = (current_time - self.check_point).total_seconds()
 
-        if (current_time - self.check_point).total_seconds() > self.time_horizon and not self.initialized:
-            """
-            Initializes cdesf
-            """
+        if not self.initialized and time_distance > self.time_horizon:
             self.check_point = current_time
             self.initialize_cdesf()
-        elif self.initialized:
-            """
-            If we are past the first check point, graph distances are calculated and DenStream triggered
-            """
-            graph_distance, time_distance = extract_case_distances(
-                self.process_model_graph, self.cases[case_index])
-            self.cases[case_index].graph_distance = graph_distance
-            self.cases[case_index].time_distance = time_distance
+            return
 
-            # DENSTREAM
-            self.denstream.train(self.cases[case_index])
-            self.check_for_drift()
+        case.distances = extract_case_distances(self.process_model_graph, case)
 
-            # plots
-            if self.gen_plot:
-                normals, outliers = [], []
-                for case in self.cases:
-                    if not np.isnan(np.sum(case.point)) and self.denstream.is_normal(case.point):
-                        normals.append(case.point)
-                    else:
-                        outliers.append(case.point)
-                feature_space(self.name,
-                              self.event_index,
-                              self.cp_count,
-                              normals,
-                              outliers,
-                              self.denstream.generate_clusters(),
-                              self.denstream.generate_outlier_clusters(),
-                              self.denstream.epsilon,
-                              self.feature_space_plot_path)
+        # DenStream
+        self.denstream.train(case)
+        self.check_for_drift()
 
-            # metrics
-            if self.gen_metrics:
-                self.metrics.compute_case_metrics(self.event_index,
-                                                  act_timestamp,
-                                                  self.cp_count,
-                                                  self.cases[case_index],
-                                                  self.denstream.is_normal(self.cases[case_index].point))
-                self.metrics.compute_cluster_metrics(self.event_index,
-                                                     act_timestamp,
-                                                     self.cp_count,
-                                                     self.denstream.generate_clusters(),
-                                                     self.denstream.generate_outlier_clusters())
+        # TODO: Add back plots and metrics
 
-            if (current_time - self.check_point).total_seconds() > self.time_horizon:
-                """
-                Check point
-                """
-                self.check_point = current_time
-                self.check_point_update()
+        if time_distance > self.time_horizon:
+            self.check_point = current_time
+            self.check_point_update()
 
-                self.metrics.save_pmg_on_check_point(
-                    self.process_model_graph, self.cp_count)
-                if self.gen_metrics:
-                    self.metrics.save_case_metrics_on_check_point()
-                    self.metrics.save_cluster_metrics_on_check_point()
+    # def OLD_process_event(
+    #     self, case_id: str, act_name: str, act_timestamp: datetime
+    # ) -> None:
+    #     """
+    #     The core function in the Process class.
+    #     Sets a new case and controls the check point.
+    #     If gp_creation is True, calculates the case metrics and uses
+    #     them to train DenStream, recalculates the Nyquist and releases
+    #     old cases if necessary.
 
-    def run(self, stream: log.EventStream) -> None:
+    #     Parameters
+    #     --------------------------------------
+    #     case_id: str
+    #         The case identifier
+    #     act_name: str
+    #         Activity's name
+    #     act_timestamp: datetime
+    #         Activity timestamp
+    #     """
+    #     self.total_cases.add(case_id)
+
+    #     case_index = self.set_case(case_id, act_name, act_timestamp)
+    #     current_time = self.cases[case_index].last_time
+
+    #     if (
+    #         current_time - self.check_point
+    #     ).total_seconds() > self.time_horizon and not self.initialized:
+    #         """
+    #         Initializes cdesf
+    #         """
+    #         self.check_point = current_time
+    #         self.initialize_cdesf()
+    #     elif self.initialized:
+    #         """
+    #         If we are past the first check point, graph distances are calculated and DenStream triggered
+    #         """
+    #         graph_distance, time_distance = extract_case_distances(
+    #             self.process_model_graph, self.cases[case_index]
+    #         )
+    #         self.cases[case_index].graph_distance = graph_distance
+    #         self.cases[case_index].time_distance = time_distance
+
+    #         # DENSTREAM
+    #         self.denstream.train(self.cases[case_index])
+    #         self.check_for_drift()
+
+    #         # plots
+    #         if self.gen_plot:
+    #             normals, outliers = [], []
+    #             for case in self.cases:
+    #                 if not np.isnan(np.sum(case.point)) and self.denstream.is_normal(
+    #                     case.point
+    #                 ):
+    #                     normals.append(case.point)
+    #                 else:
+    #                     outliers.append(case.point)
+    #             feature_space(
+    #                 self.name,
+    #                 self.event_index,
+    #                 self.cp_count,
+    #                 normals,
+    #                 outliers,
+    #                 self.denstream.generate_clusters(),
+    #                 self.denstream.generate_outlier_clusters(),
+    #                 self.denstream.epsilon,
+    #                 self.feature_space_plot_path,
+    #             )
+
+    #         # metrics
+    #         if self.gen_metrics:
+    #             self.metrics.compute_case_metrics(
+    #                 self.event_index,
+    #                 act_timestamp,
+    #                 self.cp_count,
+    #                 self.cases[case_index],
+    #                 self.denstream.is_normal(self.cases[case_index].point),
+    #             )
+    #             self.metrics.compute_cluster_metrics(
+    #                 self.event_index,
+    #                 act_timestamp,
+    #                 self.cp_count,
+    #                 self.denstream.generate_clusters(),
+    #                 self.denstream.generate_outlier_clusters(),
+    #             )
+
+    #         if (current_time - self.check_point).total_seconds() > self.time_horizon:
+    #             """
+    #             Check point
+    #             """
+    #             self.check_point = current_time
+    #             self.check_point_update()
+
+    #             self.metrics.save_pmg_on_check_point(
+    #                 self.process_model_graph, self.cp_count
+    #             )
+    #             if self.gen_metrics:
+    #                 self.metrics.save_case_metrics_on_check_point()
+    #                 self.metrics.save_cluster_metrics_on_check_point()
+
+    def run(self, stream: obj.EventStream) -> None:
         """
         Simulates the event stream by iterating through the stream variable
         generated reading the input file, calls set_process at each new event
 
         Parameters
         --------------------------------------
-        stream: log.EventStream
+        stream: obj.EventStream
             Event stream imported by PM4Py
         """
 
         for index, event in enumerate(stream):
             self.event_index = index
-            case_id, activity_name, activity_timestamp = event[
-                'case:concept:name'], event['concept:name'], event['time:timestamp']
+
             if index == 0:
-                self.check_point = activity_timestamp
-            self.process_event(case_id, activity_name, activity_timestamp)
+                self.check_point = event["time:timestamp"]
+
+            self.process_event(event)
+            # self.event_index = index
+            # case_id, activity_name, activity_timestamp = (
+            #     event["case:concept:name"],
+            #     event["concept:name"],
+            #     event["time:timestamp"],
+            # )
+            # if index == 0:
+            #     self.check_point = activity_timestamp
+            # self.process_event(case_id, activity_name, activity_timestamp)
 
         self.drift_indexes = list(np.unique(self.drift_indexes))
+
         print("Total number of drifts:", len(self.drift_indexes))
         print("Drift points:", self.drift_indexes)
+
         cumulative_stream_drifts(
-            len(stream), self.drift_indexes, f'output/visualization/drifts/{self.name}.pdf')
+            len(stream),
+            self.drift_indexes,
+            f"output/visualization/drifts/{self.name}.pdf",
+        )
