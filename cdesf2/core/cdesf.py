@@ -299,8 +299,6 @@ class CDESF:
         self.denstream.train(case)
         self.check_for_drift()
 
-        # TODO: Add back plots and metrics
-
         # Plots
         if self.gen_plot:
             normals, outliers = [], []
