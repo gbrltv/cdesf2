@@ -301,9 +301,54 @@ class CDESF:
 
         # TODO: Add back plots and metrics
 
+        # Plots
+        if self.gen_plot:
+            normals, outliers = [], []
+            for case in self.cases:
+                if not np.isnan(np.sum(case.point)) and self.denstream.is_normal(
+                    case.point
+                ):
+                    normals.append(case.point)
+                else:
+                    outliers.append(case.point)
+            feature_space(
+                self.name,
+                self.event_index,
+                self.cp_count,
+                normals,
+                outliers,
+                self.denstream.generate_clusters(),
+                self.denstream.generate_outlier_clusters(),
+                self.denstream.epsilon,
+                self.feature_space_plot_path,
+            )
+
+        # Metrics
+        if self.gen_metrics:
+            self.metrics.compute_case_metrics(
+                self.event_index,
+                event.get("time:timestamp"),
+                self.cp_count,
+                self.cases[case_index],
+                self.denstream.is_normal(self.cases[case_index].point),
+            )
+            self.metrics.compute_cluster_metrics(
+                self.event_index,
+                event.get("time:timestamp"),
+                self.cp_count,
+                self.denstream.generate_clusters(),
+                self.denstream.generate_outlier_clusters(),
+            )
+
         if time_distance > self.time_horizon:
             self.check_point = current_time
             self.check_point_update()
+            self.metrics.save_pmg_on_check_point(
+                self.process_model_graph, self.cp_count
+            )
+            if self.gen_metrics:
+                self.metrics.save_case_metrics_on_check_point()
+                self.metrics.save_cluster_metrics_on_check_point()
 
     # def OLD_process_event(
     #     self, case_id: str, act_name: str, act_timestamp: datetime
