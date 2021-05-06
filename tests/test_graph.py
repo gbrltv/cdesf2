@@ -79,6 +79,96 @@ class TestGraph:
         return graph
 
     @pytest.fixture
+    def simple_graph_with_attributes(self):
+        case_list = []
+
+        case = Case("1")
+        case.add_event(
+            {
+                "concept:name": "activityA",
+                "time:timestamp": datetime(2015, 5, 10, 8, 00, 00),
+                "attribute_one": 10,
+                "attribute_two": 5,
+            }
+        )
+        case.add_event(
+            {
+                "concept:name": "activityB",
+                "time:timestamp": datetime(2015, 5, 10, 8, 00, 10),
+                "attribute_one": 0,
+                "attribute_two": 7,
+            }
+        )
+        case.add_event(
+            {
+                "concept:name": "activityC",
+                "time:timestamp": datetime(2015, 5, 10, 8, 00, 20),
+                "attribute_one": 2,
+                "attribute_two": 4,
+            }
+        )
+        case_list.append(case)
+
+        case = Case("2")
+        case.add_event(
+            {
+                "concept:name": "activityA",
+                "time:timestamp": datetime(2015, 5, 10, 8, 00, 00),
+                "attribute_one": 3,
+                "attribute_two": 10,
+            }
+        )
+        case.add_event(
+            {
+                "concept:name": "activityB",
+                "time:timestamp": datetime(2015, 5, 10, 8, 00, 10),
+                "attribute_one": 6,
+                "attribute_two": 2,
+            }
+        )
+        case_list.append(case)
+
+        case = Case("3")
+        case.add_event(
+            {
+                "concept:name": "activityA",
+                "time:timestamp": datetime(2015, 5, 10, 8, 00, 00),
+                "attribute_one": 8,
+                "attribute_two": 4,
+            }
+        )
+        case.add_event(
+            {
+                "concept:name": "activityB",
+                "time:timestamp": datetime(2015, 5, 10, 8, 00, 10),
+                "attribute_one": 1,
+                "attribute_two": 12,
+            }
+        )
+        case.add_event(
+            {
+                "concept:name": "activityC",
+                "time:timestamp": datetime(2015, 5, 10, 8, 00, 20),
+                "attribute_one": 2,
+                "attribute_two": 2,
+            }
+        )
+        case.add_event(
+            {
+                "concept:name": "activityD",
+                "time:timestamp": datetime(2015, 5, 10, 8, 00, 30),
+                "attribute_one": 1,
+                "attribute_two": 1,
+            }
+        )
+        case_list.append(case)
+
+        graph = nx.DiGraph(name="simple_graph_with_attributes")
+        graph = initialize_graph(graph, case_list, ["attribute_one", "attribute_two"])
+
+        return graph
+
+    @pytest.fixture
     def complex_graph(self):
         case_list = []
 
@@ -348,7 +438,9 @@ class TestGraph:
 
         return graph
 
-    def test_populate_graph(self, simple_graph, complex_graph):
+    def test_populate_graph(
+        self, simple_graph, simple_graph_with_attributes: nx.DiGraph, complex_graph
+    ):
         assert len(simple_graph.nodes()) == 4
         assert len(simple_graph.edges()) == 3
         assert simple_graph["activityA"]["activityB"]["weight"] == 3
@@ -357,6 +449,27 @@ class TestGraph:
         assert simple_graph["activityB"]["activityC"]["time"] == 20
         assert simple_graph["activityC"]["activityD"]["weight"] == 1
         assert simple_graph["activityC"]["activityD"]["time"] == 10
+
+        assert len(simple_graph_with_attributes.nodes()) == 4
+        assert len(simple_graph_with_attributes.edges()) == 3
+        assert simple_graph_with_attributes["activityA"]["activityB"]["weight"] == 3
+        assert simple_graph_with_attributes["activityA"]["activityB"]["time"] == 30
+        # TODO: Maybe (just maybe) the node should hold an array with all different values, then the distances function can calculate the distance with the new one?
+        assert simple_graph_with_attributes.nodes["activityA"]["attribute_one"] == [
+            10,
+            3,
+            8,
+        ]
+        assert simple_graph_with_attributes.nodes["activityA"]["attribute_two"] == [
+            5,
+            10,
+            4,
+        ]
+        assert simple_graph_with_attributes.nodes["activityB"]["attribute_one"] == [
+            0,
+            6,
+            1,
+        ]
 
         assert len(complex_graph.nodes()) == 6
         assert len(complex_graph.edges()) == 6

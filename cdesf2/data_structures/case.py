@@ -54,6 +54,9 @@ class Case:
     def get_timestamps(self) -> "list[datetime]":
         return [event["time:timestamp"] for event in self.events]
 
+    def get_attribute(self, attribute: str) -> "list":
+        return [event.get(attribute) for event in self.events]
+
     # def set_activity(self, activity_name: str, activity_timestamp: datetime) -> None:
     #     """
     #     Creates a new Activity and appends it to the case activities list.
