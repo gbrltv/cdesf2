@@ -162,7 +162,7 @@ class TestCdesf:
         assert case_1.distances["time"] == 0
 
         process.cases = cases_list
-        process.process_model_graph = initialize_graph(nx.DiGraph(), process.cases)
+        process.process_model_graph = initialize_graph(process.cases)
         process.initialize_case_metrics()
         case_3 = process.cases[0]
 
@@ -271,7 +271,7 @@ class TestCdesf:
 
         assert process.cases == []
         with pytest.raises(Exception):
-            assert initialize_graph(nx.DiGraph(), [])
+            assert initialize_graph([])
 
         case4 = Case("4")
         case4.add_event(
@@ -295,8 +295,8 @@ class TestCdesf:
 
         process.cases = cases_list
         process.cases.insert(0, case4)
-        process.process_model_graph = initialize_graph(nx.DiGraph(), process.cases)
-        pmg = initialize_graph(nx.DiGraph(), cases_list)
+        process.process_model_graph = initialize_graph(process.cases)
+        pmg = initialize_graph(cases_list)
         for case in cases_list:
             case.distances = extract_case_distances(pmg, case)
         case_4 = process.cases[0]
@@ -405,7 +405,7 @@ class TestCdesf:
         assert process.nyquist == 1
         assert len(process.process_model_graph.edges) == 3
         assert len(process.process_model_graph.nodes) == 4
-        check_point_graph = initialize_graph(nx.DiGraph(), process.cases)
+        check_point_graph = initialize_graph(process.cases)
         for node1, node2, data in process.process_model_graph.edges.data():
             assert (
                 process.process_model_graph[node1][node2]
@@ -423,7 +423,7 @@ class TestCdesf:
         # self.cases > nyquist
         # nyquist = 1
         # process_model_graph = 1
-        process.process_model_graph = initialize_graph(nx.DiGraph(), [cases_list[2]])
+        process.process_model_graph = initialize_graph([cases_list[2]])
         pmg = process.process_model_graph
         assert pmg["activityA"]["activityB"]
         assert pmg["activityB"]["activityC"]
@@ -446,7 +446,7 @@ class TestCdesf:
         assert pmg["activityA"]["activityB"]
         assert pmg["activityB"]["activityC"]
         assert pmg["activityC"]["activityD"]
-        check_point_graph = initialize_graph(nx.DiGraph(), process.cases)
+        check_point_graph = initialize_graph(process.cases)
         for node1, node2, data in process.process_model_graph.edges.data():
             pmg[node1][node2]["weight"] *= 0.95
             pmg[node1][node2]["weight"] += check_point_graph[node1][node2]["weight"]
@@ -475,7 +475,7 @@ class TestCdesf:
         case2 = cases_list[1]
         case3 = cases_list[0]
 
-        process.process_model_graph = initialize_graph(nx.DiGraph(), [cases_list[1]])
+        process.process_model_graph = initialize_graph([cases_list[1]])
         pmg = process.process_model_graph
         assert pmg["activityA"]["activityB"]
         with pytest.raises(Exception):
@@ -498,7 +498,7 @@ class TestCdesf:
         assert process.process_model_graph["activityA"]["activityB"]
         assert process.process_model_graph["activityB"]["activityC"]
         assert process.process_model_graph["activityC"]["activityD"]
-        check_point_graph = initialize_graph(nx.DiGraph(), process.cases)
+        check_point_graph = initialize_graph(process.cases)
         for node1, node2, data in process.process_model_graph.edges.data():
             pmg[node1][node2]["weight"] *= 0.95
             pmg[node1][node2]["weight"] += check_point_graph[node1][node2]["weight"]
@@ -527,9 +527,7 @@ class TestCdesf:
         case2 = cases_list[1]
         case3 = cases_list[0]
 
-        process.process_model_graph = initialize_graph(
-            nx.DiGraph(), [cases_list[1], cases_list[2]]
-        )
+        process.process_model_graph = initialize_graph([cases_list[1], cases_list[2]])
         pmg = process.process_model_graph
         assert pmg["activityA"]["activityB"]
         assert pmg["activityB"]["activityC"]
@@ -553,7 +551,7 @@ class TestCdesf:
         assert process.process_model_graph["activityA"]["activityB"]
         assert process.process_model_graph["activityB"]["activityC"]
         assert process.process_model_graph["activityC"]["activityD"]
-        check_point_graph = initialize_graph(nx.DiGraph(), process.cases)
+        check_point_graph = initialize_graph(process.cases)
         for node1, node2, data in process.process_model_graph.edges.data():
             pmg[node1][node2]["weight"] *= 0.95
             pmg[node1][node2]["weight"] += check_point_graph[node1][node2]["weight"]
@@ -928,8 +926,8 @@ class TestCdesf:
     #     assert not path.isfile(f'./metrics/{process.name}_process_model_graphs/process_model_graph_{process.cp_count}.json')
     #
     #     process.cases = cases_list
-    #     process.process_model_graph = initialize_graph(nx.DiGraph(), process.cases)
-    #     pmg = initialize_graph(nx.DiGraph(), process.cases)
+    #     process.process_model_graph = initialize_graph(process.cases)
+    #     pmg = initialize_graph(process.cases)
     #     pmg = normalize_graph(pmg)
     #     process.initialize_case_metrics()
     #     process.save_pmg_on_check_point()

@@ -233,8 +233,7 @@ class TestDenstream:
         )
         case_list.append(case_2)
 
-        graph = nx.DiGraph()
-        graph = initialize_graph(graph, case_list)
+        graph = initialize_graph(case_list)
 
         case_3 = Case("3")
         case_3.add_event(
@@ -338,8 +337,7 @@ class TestDenstream:
         assert np.all(denstream.p_micro_clusters[2].weight == 3 * 2 ** (-0.15))
 
     def test_dbscan(self, denstream: DenStream, cases_list):
-        graph = nx.DiGraph()
-        graph = initialize_graph(graph, cases_list)
+        graph = initialize_graph(cases_list)
         for case in cases_list:
             case.distances = extract_case_distances(graph, case)
 
@@ -461,7 +459,7 @@ class TestDenstream:
         )
         cases_list.append(case)
 
-        pmg = initialize_graph(nx.DiGraph(), cases_list)
+        pmg = initialize_graph(cases_list)
         for case in cases_list:
             case.distances = extract_case_distances(pmg, case)
 

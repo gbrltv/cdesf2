@@ -35,15 +35,13 @@ def normalize_graph(graph: nx.DiGraph) -> nx.DiGraph:
 
 
 def initialize_graph(
-    graph: nx.DiGraph, case_list: "list[Case]", additional_attributes: "list[str]" = []
+    case_list: "list[Case]", additional_attributes: "list[str]" = []
 ) -> nx.DiGraph:
     """
     Initialize a graph based on the weights and time differences from a list of cases
 
     Parameters
     --------------------------------------
-    graph: nx.DiGraph,
-        Graph to be initialized
     case_list: list[Case],
         List of cases used to initialize the graph
     Returns
@@ -51,6 +49,7 @@ def initialize_graph(
     graph: nx.DiGraph,
         Initialized graph
     """
+    graph = nx.DiGraph()
 
     for case in case_list:
         trace = case.get_trace()
@@ -82,44 +81,6 @@ def initialize_graph(
             else:
                 graph[edge[0]][edge[1]]["weight"] += 1
                 graph[edge[0]][edge[1]]["time"] += times[trace_index]
-
-        # print("case", case.events)
-
-        # for activity in trace:
-        #     if activity not in graph.nodes:
-        #         ###
-        #         attributes: "dict[str, str]" = {}
-
-        #         # attributes = [
-        #         #     {attribute: case.get_attribute(attribute)}
-        #         #     for attribute in additional_attributes
-        #         # ][0]
-        #         # print("attributes", attributes)
-        #         ###
-
-        #         graph.add_node(activity, **attributes)
-        #     else:
-        #         # TODO: Update node values
-        #         continue
-
-    # trace_list, time_list = extract_cases_time_and_trace(case_list)
-
-    # time_list = time_difference(time_list)
-
-    # for trace, time in zip(trace_list, time_list):
-    #     for activity in trace:
-    #         if activity not in graph.nodes:
-    #             graph.add_node(activity, freq=1)
-    #         else:
-    #             graph.nodes[activity]["freq"] += 1
-
-    #     for i in range(len(trace) - 1):
-    #         edges = (trace[i], trace[i + 1])
-    #         if edges not in graph.edges:
-    #             graph.add_edge(*edges, weight=1, time=time[i])
-    #         else:
-    #             graph[edges[0]][edges[1]]["weight"] += 1
-    #             graph[edges[0]][edges[1]]["time"] += time[i]
 
     return normalize_graph(graph)
 

@@ -142,8 +142,7 @@ def test_update():
     )
     case_list.append(case)
 
-    graph = nx.DiGraph()
-    graph = initialize_graph(graph, case_list)
+    graph = initialize_graph(case_list)
 
     case = Case("3")
     case.add_event(

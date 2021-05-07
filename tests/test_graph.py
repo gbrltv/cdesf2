@@ -73,8 +73,7 @@ class TestGraph:
         )
         case_list.append(case)
 
-        graph = nx.DiGraph(name="simple_graph")
-        graph = initialize_graph(graph, case_list)
+        graph = initialize_graph(case_list)
 
         return graph
 
@@ -163,8 +162,7 @@ class TestGraph:
         )
         case_list.append(case)
 
-        graph = nx.DiGraph(name="simple_graph_with_attributes")
-        graph = initialize_graph(graph, case_list, ["attribute_one", "attribute_two"])
+        graph = initialize_graph(case_list, ["attribute_one", "attribute_two"])
 
         return graph
 
@@ -433,8 +431,7 @@ class TestGraph:
         )
         case_list.append(case)
 
-        graph = nx.DiGraph(name="complex_graph")
-        graph = initialize_graph(graph, case_list)
+        graph = initialize_graph(case_list)
 
         return graph
 

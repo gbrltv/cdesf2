@@ -135,7 +135,7 @@ class CDESF:
         self.nyquist = self.check_point_cases * 2
         # initialize PMG
         self.process_model_graph = initialize_graph(
-            nx.DiGraph(), self.cases, self.additional_attributes
+            self.cases, self.additional_attributes
         )
         # compute case metrics for initial cases
         self.initialize_case_metrics()
@@ -248,9 +248,7 @@ class CDESF:
             if self.check_point_cases > 5:
                 self.nyquist = self.check_point_cases * 2
 
-            check_point_graph = initialize_graph(
-                nx.DiGraph(), self.cases, self.additional_attributes
-            )
+            check_point_graph = initialize_graph(self.cases, self.additional_attributes)
             self.process_model_graph = merge_graphs(
                 self.process_model_graph, check_point_graph
             )
