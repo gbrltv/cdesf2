@@ -14,7 +14,10 @@ class Metrics:
     and writes the results into files periodically (check points)
     """
 
-    def __init__(self, file_name: str):
+    columns: "list[str]"
+    additional_attributes: "list[str]"
+
+    def __init__(self, file_name: str, additional_attributes: "list[str]" = []):
         """
         Creates the paths for the outputs and initializes the metrics attributes
 
@@ -26,6 +29,7 @@ class Metrics:
         self.case_metrics = []
         self.cluster_metrics = []
         self.file_name = file_name
+        self.additional_attributes = additional_attributes
 
         self.path_to_pmg_metrics = f"output/metrics/{file_name}_process_model_graphs"
         self.path_to_pmg_vis = f"output/visualization/{file_name}_process_model_graphs"
@@ -39,17 +43,22 @@ class Metrics:
             makedirs(self.path_to_case_metrics, exist_ok=True)
             makedirs(self.path_to_cluster_metrics, exist_ok=True)
 
-            pd.DataFrame(
-                columns=[
-                    "stream_index",
-                    "timestamp",
-                    "check point",
-                    "case",
-                    "graph distance",
-                    "time distance",
-                    "label",
-                ]
-            ).to_csv(f"{self.path_to_case_metrics}/{file_name}.csv", index=False)
+            self.columns = [
+                "stream_index",
+                "timestamp",
+                "check point",
+                "case",
+                "graph distance",
+                "time distance",
+                "label",
+            ]
+
+            for attribute_name in additional_attributes:
+                self.columns.append(attribute_name)
+
+            pd.DataFrame(columns=self.columns).to_csv(
+                f"{self.path_to_case_metrics}/{file_name}.csv", index=False
+            )
             pd.DataFrame(
                 columns=[
                     "stream_index",
@@ -94,17 +103,20 @@ class Metrics:
         if label:
             label_str = "normal"
 
-        self.case_metrics.append(
-            [
-                event_index,
-                timestamp,
-                cp_count,
-                case.id,
-                case.distances.get("graph"),
-                case.distances.get("time"),
-                label_str,
-            ]
-        )
+        data = [
+            event_index,
+            timestamp,
+            cp_count,
+            case.id,
+            case.distances.get("graph"),
+            case.distances.get("time"),
+            label_str,
+        ]
+
+        for attribute_name in self.additional_attributes:
+            data.append(case.distances.get(attribute_name))
+
+        self.case_metrics.append(data)
 
     def save_case_metrics_on_check_point(self) -> None:
         """
@@ -112,17 +124,8 @@ class Metrics:
         Also releases the case_metrics attribute
         """
         cm_path = f"{self.path_to_case_metrics}/{self.file_name}.csv"
-        columns = [
-            "stream_index",
-            "timestamp",
-            "check point",
-            "case",
-            "graph distance",
-            "time distance",
-            "label",
-        ]
         pd.read_csv(cm_path).append(
-            pd.DataFrame(self.case_metrics, columns=columns)
+            pd.DataFrame(self.case_metrics, columns=self.columns)
         ).to_csv(cm_path, index=False)
         self.case_metrics.clear()
 

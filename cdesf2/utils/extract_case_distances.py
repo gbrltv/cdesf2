@@ -11,10 +11,16 @@ def extract_case_distances(
 ) -> "dict[str, float]":
     trace = case.get_trace()
     timestamps = case.get_timestamps()
-    timestamp_differences = time_difference([timestamps])[0]
+    # timestamp_differences = time_difference([timestamps])[0]
 
+    # TODO: Clean up distance calculation
     if not graph.edges or len(trace) < 2:
-        return {"graph": 0, "time": 0}
+        pre_distances = {"graph": 0, "time": 0}
+
+        for attribute_name in additional_attributes:
+            pre_distances[attribute_name] = 0.0
+
+        return pre_distances
 
     graph_time = []
     trace_weight = 0

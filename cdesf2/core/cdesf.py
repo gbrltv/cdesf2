@@ -86,7 +86,7 @@ class CDESF:
         self.case_metrics = []
         self.active_core_clusters = set()
         self.drift_indexes = []
-        self.metrics = Metrics(self.name)
+        self.metrics = Metrics(self.name, additional_attributes)
         self.feature_space_plot_path = f"output/visualization/{self.name}_feature_space"
         self.additional_attributes = additional_attributes
         makedirs(self.feature_space_plot_path, exist_ok=True)
