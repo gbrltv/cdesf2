@@ -19,6 +19,7 @@ class CDESF:
     """
 
     cases: "list[Case]"
+    additional_attributes: "list[str]"
 
     def __init__(
         self,
@@ -32,6 +33,7 @@ class CDESF:
         n_features: int = 2,
         gen_plot: bool = False,
         gen_metrics: bool = True,
+        additional_attributes: "list[str]" = [],
     ):
         """
         This function sets up a new process, defining its name, and preparing initial attributes.
@@ -86,6 +88,7 @@ class CDESF:
         self.drift_indexes = []
         self.metrics = Metrics(self.name)
         self.feature_space_plot_path = f"output/visualization/{self.name}_feature_space"
+        self.additional_attributes = additional_attributes
         makedirs(self.feature_space_plot_path, exist_ok=True)
 
     def get_case_index(self, case_id: str) -> Union[int, None]:
@@ -113,7 +116,9 @@ class CDESF:
         Initializes metrics in case the user triggers this task
         """
         for case in self.cases:
-            case.distances = extract_case_distances(self.process_model_graph, case)
+            case.distances = extract_case_distances(
+                self.process_model_graph, case, self.additional_attributes
+            )
 
     def release_cases_from_memory(self) -> None:
         """
@@ -129,7 +134,9 @@ class CDESF:
         """
         self.nyquist = self.check_point_cases * 2
         # initialize PMG
-        self.process_model_graph = initialize_graph(nx.DiGraph(), self.cases)
+        self.process_model_graph = initialize_graph(
+            nx.DiGraph(), self.cases, self.additional_attributes
+        )
         # compute case metrics for initial cases
         self.initialize_case_metrics()
 
@@ -241,7 +248,9 @@ class CDESF:
             if self.check_point_cases > 5:
                 self.nyquist = self.check_point_cases * 2
 
-            check_point_graph = initialize_graph(nx.DiGraph(), self.cases)
+            check_point_graph = initialize_graph(
+                nx.DiGraph(), self.cases, self.additional_attributes
+            )
             self.process_model_graph = merge_graphs(
                 self.process_model_graph, check_point_graph
             )
@@ -293,7 +302,9 @@ class CDESF:
             self.initialize_cdesf()
             return
 
-        case.distances = extract_case_distances(self.process_model_graph, case)
+        case.distances = extract_case_distances(
+            self.process_model_graph, case, self.additional_attributes
+        )
 
         # DenStream
         self.denstream.train(case)
