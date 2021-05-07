@@ -157,4 +157,13 @@ def merge_graphs(
                 *path, weight=data["weight"], time=data["time"]
             )
 
+    for activity, data in check_point_graph.nodes(data=True):
+        if activity not in process_model_graph.nodes:
+            process_model_graph.add_node(activity, **data)
+        else:
+            for attribute in process_model_graph.nodes[activity]:
+                process_model_graph.nodes[activity][attribute].extend(
+                    check_point_graph.nodes[activity][attribute]
+                )
+
     return normalize_graph(process_model_graph)

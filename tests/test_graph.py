@@ -525,3 +525,12 @@ class TestGraph:
         assert complex_graph["activityD"]["activityE"]["time"] == 20000
         assert complex_graph["activityC"]["activityD"]["weight"] == 1
         assert complex_graph["activityC"]["activityD"]["time"] == 10
+
+    def test_merge_graphs_with_attributes(self, simple_graph_with_attributes):
+        new_graph = merge_graphs(
+            simple_graph_with_attributes, simple_graph_with_attributes
+        )
+
+        assert new_graph.nodes["activityA"]["attribute_one"] == [10, 3, 8, 10, 3, 8]
+        assert new_graph.nodes["activityA"]["attribute_two"] == [5, 10, 4, 5, 10, 4]
+        assert new_graph.nodes["activityB"]["attribute_one"] == [0, 6, 1, 0, 6, 1]
