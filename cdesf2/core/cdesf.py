@@ -1,3 +1,4 @@
+import multiprocessing as mp
 from typing import Union
 from os import makedirs
 from datetime import datetime
@@ -89,6 +90,10 @@ class CDESF:
         self.metrics = Metrics(self.name, additional_attributes)
         self.feature_space_plot_path = f"output/visualization/{self.name}_feature_space"
         self.additional_attributes = additional_attributes
+
+        # Used to store the current feature_space jobs that are executing.
+        self.fs_pool = mp.Pool(mp.cpu_count())
+
         makedirs(self.feature_space_plot_path, exist_ok=True)
 
     def get_case_index(self, case_id: str) -> Union[int, None]:
@@ -148,6 +153,10 @@ class CDESF:
             for cluster in group:
                 self.active_core_clusters.add(cluster.id)
 
+        # Computed outside mainly to ensure that the value of the clusters
+        # gets calculated sequentially and not inside the pool.
+        generated_o_clusters = self.denstream.generate_outlier_clusters()
+
         # plot
         if self.gen_plot:
             normals, outliers = [], []
@@ -158,16 +167,20 @@ class CDESF:
                     normals.append(case.point)
                 else:
                     outliers.append(case.point)
-            feature_space(
-                self.name,
-                self.event_index,
-                self.cp_count,
-                normals,
-                outliers,
-                self.denstream.generate_clusters(),
-                self.denstream.generate_outlier_clusters(),
-                self.denstream.epsilon,
-                self.feature_space_plot_path,
+
+            self.fs_pool.apply_async(
+                func=feature_space,
+                args=(
+                    self.name,
+                    self.event_index,
+                    self.cp_count,
+                    normals,
+                    outliers,
+                    groups,
+                    generated_o_clusters,
+                    self.denstream.epsilon,
+                    self.feature_space_plot_path,
+                ),
             )
 
         # metrics
@@ -308,6 +321,11 @@ class CDESF:
         self.denstream.train(case)
         self.check_for_drift()
 
+        # Computed outside mainly to ensure that the value of the clusters
+        # gets calculated sequentially and not inside the pool.
+        generated_clusters = self.denstream.generate_clusters()
+        generated_o_clusters = self.denstream.generate_outlier_clusters()
+
         # Plots
         if self.gen_plot:
             normals, outliers = [], []
@@ -318,16 +336,20 @@ class CDESF:
                     normals.append(case.point)
                 else:
                     outliers.append(case.point)
-            feature_space(
-                self.name,
-                self.event_index,
-                self.cp_count,
-                normals,
-                outliers,
-                self.denstream.generate_clusters(),
-                self.denstream.generate_outlier_clusters(),
-                self.denstream.epsilon,
-                self.feature_space_plot_path,
+
+            self.fs_pool.apply_async(
+                func=feature_space,
+                args=(
+                    self.name,
+                    self.event_index,
+                    self.cp_count,
+                    normals,
+                    outliers,
+                    generated_clusters,
+                    generated_o_clusters,
+                    self.denstream.epsilon,
+                    self.feature_space_plot_path,
+                ),
             )
 
         # Metrics
@@ -357,105 +379,6 @@ class CDESF:
                 self.metrics.save_case_metrics_on_check_point()
                 self.metrics.save_cluster_metrics_on_check_point()
 
-    # def OLD_process_event(
-    #     self, case_id: str, act_name: str, act_timestamp: datetime
-    # ) -> None:
-    #     """
-    #     The core function in the Process class.
-    #     Sets a new case and controls the check point.
-    #     If gp_creation is True, calculates the case metrics and uses
-    #     them to train DenStream, recalculates the Nyquist and releases
-    #     old cases if necessary.
-
-    #     Parameters
-    #     --------------------------------------
-    #     case_id: str
-    #         The case identifier
-    #     act_name: str
-    #         Activity's name
-    #     act_timestamp: datetime
-    #         Activity timestamp
-    #     """
-    #     self.total_cases.add(case_id)
-
-    #     case_index = self.set_case(case_id, act_name, act_timestamp)
-    #     current_time = self.cases[case_index].last_time
-
-    #     if (
-    #         current_time - self.check_point
-    #     ).total_seconds() > self.time_horizon and not self.initialized:
-    #         """
-    #         Initializes cdesf
-    #         """
-    #         self.check_point = current_time
-    #         self.initialize_cdesf()
-    #     elif self.initialized:
-    #         """
-    #         If we are past the first check point, graph distances are calculated and DenStream triggered
-    #         """
-    #         graph_distance, time_distance = extract_case_distances(
-    #             self.process_model_graph, self.cases[case_index]
-    #         )
-    #         self.cases[case_index].graph_distance = graph_distance
-    #         self.cases[case_index].time_distance = time_distance
-
-    #         # DENSTREAM
-    #         self.denstream.train(self.cases[case_index])
-    #         self.check_for_drift()
-
-    #         # plots
-    #         if self.gen_plot:
-    #             normals, outliers = [], []
-    #             for case in self.cases:
-    #                 if not np.isnan(np.sum(case.point)) and self.denstream.is_normal(
-    #                     case.point
-    #                 ):
-    #                     normals.append(case.point)
-    #                 else:
-    #                     outliers.append(case.point)
-    #             feature_space(
-    #                 self.name,
-    #                 self.event_index,
-    #                 self.cp_count,
-    #                 normals,
-    #                 outliers,
-    #                 self.denstream.generate_clusters(),
-    #                 self.denstream.generate_outlier_clusters(),
-    #                 self.denstream.epsilon,
-    #                 self.feature_space_plot_path,
-    #             )
-
-    #         # metrics
-    #         if self.gen_metrics:
-    #             self.metrics.compute_case_metrics(
-    #                 self.event_index,
-    #                 act_timestamp,
-    #                 self.cp_count,
-    #                 self.cases[case_index],
-    #                 self.denstream.is_normal(self.cases[case_index].point),
-    #             )
-    #             self.metrics.compute_cluster_metrics(
-    #                 self.event_index,
-    #                 act_timestamp,
-    #                 self.cp_count,
-    #                 self.denstream.generate_clusters(),
-    #                 self.denstream.generate_outlier_clusters(),
-    #             )
-
-    #         if (current_time - self.check_point).total_seconds() > self.time_horizon:
-    #             """
-    #             Check point
-    #             """
-    #             self.check_point = current_time
-    #             self.check_point_update()
-
-    #             self.metrics.save_pmg_on_check_point(
-    #                 self.process_model_graph, self.cp_count
-    #             )
-    #             if self.gen_metrics:
-    #                 self.metrics.save_case_metrics_on_check_point()
-    #                 self.metrics.save_cluster_metrics_on_check_point()
-
     def run(self, stream: obj.EventStream) -> None:
         """
         Simulates the event stream by iterating through the stream variable
@@ -483,6 +406,9 @@ class CDESF:
             # if index == 0:
             #     self.check_point = activity_timestamp
             # self.process_event(case_id, activity_name, activity_timestamp)
+
+        self.fs_pool.close()
+        self.fs_pool.join()
 
         self.drift_indexes = list(np.unique(self.drift_indexes))
 

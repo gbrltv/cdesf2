@@ -26,11 +26,11 @@ class MicroCluster:
             current clusters
         """
         self.id = id_
-        self.CF = np.zeros(n_features)
-        self.CF2 = np.zeros(n_features)
+        self.cf1 = np.zeros(n_features)
+        self.cf2 = np.zeros(n_features)
         self.weight = 0
         self.lambda_ = lambda_
-        self.factor = 2 ** (-self.lambda_)
+        self.factor = 2 ** (-lambda_)
         self.creation_time = creation_time
 
     @property
@@ -43,7 +43,7 @@ class MicroCluster:
         --------------------------------------
         The micro-cluster's centroid value
         """
-        return self.CF / self.weight
+        return self.cf1 / self.weight
 
     @property
     def radius(self) -> np.ndarray:
@@ -54,8 +54,13 @@ class MicroCluster:
         --------------------------------------
         The micro-cluster's radius
         """
-        cf1_squared = (self.CF / self.weight) ** 2
-        return np.nan_to_num(np.nanmax(((self.CF2 / self.weight) - cf1_squared) ** (1 / 2)))
+        weighted_cf1 = self.cf1 / self.weight
+        weighted_cf2 = self.cf2 / self.weight
+
+        cf_operation = np.maximum(weighted_cf2 - (weighted_cf1 ** 2), 0)
+        cf_root = np.sqrt(cf_operation)
+
+        return np.nanmax(cf_root)
 
     def radius_with_new_point(self, point: np.ndarray) -> np.ndarray:
         """
@@ -67,16 +72,18 @@ class MicroCluster:
         --------------------------------------
         point: np.ndarray
             Contain graph_distance and time_distance
+
         Returns
         --------------------------------------
         The micro-cluster's radius
         """
-        cf1 = self.CF + point
-        cf2 = self.CF2 + point * point
-        weight = self.weight + 1
+        weighted_cf1 = (self.cf1 + point) / (self.weight + 1)
+        weighted_cf2 = (self.cf2 + (point ** 2)) / (self.weight + 1)
 
-        cf1_squared = (cf1 / weight) ** 2
-        return np.nan_to_num(np.nanmax(((cf2 / weight) - cf1_squared) ** (1 / 2)))
+        cf_operation = np.maximum(weighted_cf2 - (weighted_cf1 ** 2), 0)
+        cf_root = np.sqrt(cf_operation)
+
+        return np.nanmax(cf_root)
 
     def update(self, case: Case):
         """
@@ -87,15 +94,16 @@ class MicroCluster:
         case: Case
             A case object
         """
-        point = case.point
-        self.CF += point
-        self.CF2 += point * point
         self.weight += 1
+
+        self.cf1 += case.point
+        self.cf2 += case.point ** 2
 
     def decay(self):
         """
         Decays a micro-cluster using the factor, which is based on lambda
         """
-        self.CF *= self.factor
-        self.CF2 *= self.factor
         self.weight *= self.factor
+
+        self.cf1 *= self.factor
+        self.cf2 *= self.factor

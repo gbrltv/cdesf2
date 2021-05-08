@@ -42,7 +42,7 @@ def feature_space(process_name: str,
     """
     c_clusters, p_clusters = normal_clusters[0], normal_clusters[1]
 
-    plt.figure(figsize=(10, 10), dpi=400)
+    plt.figure(figsize=(10, 10))
     ax = plt.subplot(111)
 
     for group in p_clusters:
