@@ -1,6 +1,6 @@
 import networkx as nx
 from ..data_structures.case import Case
-from ..utils import time_difference, extract_cases_time_and_trace
+from ..utils import time_difference
 
 
 def normalize_graph(graph: nx.DiGraph) -> nx.DiGraph:
