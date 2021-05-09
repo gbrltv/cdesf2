@@ -1,12 +1,11 @@
-from math import log10
 import networkx as nx
 from numpy import average
+from math import log10
 from ..data_structures import Case
-from .time_difference import time_difference
 
 
-def extract_case_distances(
-    graph: nx.DiGraph, case: Case, additional_attributes: "list[str]" = []
+def calculate_case_distances(
+    graph: nx.DiGraph, case: Case, *, additional_attributes: "list[str]" = []
 ) -> "dict[str, float]":
     """
     Extracts the distances between the current graph and a given case across trace,
@@ -25,12 +24,11 @@ def extract_case_distances(
         graph and the case.
     """
     trace = case.get_trace()
-    timestamps = case.get_timestamps()
-    timestamp_differences = time_difference([timestamps])[0]
+    time_differences = calculate_case_time_distances(case)
 
     if not graph.edges or len(trace) < 2:
         # Return a map with all-zero distances.
-        default_distances = { "graph": 0.0, "time": 0.0 }
+        default_distances = {"graph": 0.0, "time": 0.0}
 
         for attribute_name in additional_attributes:
             default_distances[attribute_name] = 0.0
@@ -65,7 +63,7 @@ def extract_case_distances(
         if graph.has_edge(first_node, second_node):
             edge = graph[first_node][second_node]
             normalized_times.append(edge["time_normalized"])
-            normalized_weight += (1 - edge["weight_normalized"])
+            normalized_weight += 1 - edge["weight_normalized"]
         else:
             normalized_times.append(0.0)
             normalized_weight += 1
@@ -76,7 +74,7 @@ def extract_case_distances(
     time_difference_total = 0
 
     for time_index, normalized_time in enumerate(normalized_times):
-        time_difference_total += abs(normalized_time - timestamp_differences[time_index])
+        time_difference_total += abs(normalized_time - time_differences[time_index])
 
     if time_difference_total == 0:
         distances["time"] = 0.0
@@ -84,5 +82,19 @@ def extract_case_distances(
         distances["time"] = log10(time_difference_total)
     else:
         distances["time"] = log10(time_difference_total / time_current_total)
+
+    return distances
+
+
+def calculate_case_time_distances(case: Case) -> "list[float]":
+    timestamps = case.get_timestamps()
+
+    if len(timestamps) < 2:
+        return [0]
+
+    distances: "list[float]" = []
+
+    for lhs, rhs in list(zip(timestamps, timestamps[1:])):
+        distances.append((rhs - lhs).total_seconds())
 
     return distances

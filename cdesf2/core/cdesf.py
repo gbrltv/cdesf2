@@ -5,7 +5,7 @@ from datetime import datetime
 import networkx as nx
 import pandas as pd
 import numpy as np
-from ..utils import extract_case_distances, initialize_graph, merge_graphs, Metrics
+from ..utils import calculate_case_distances, initialize_graph, merge_graphs, Metrics
 from ..data_structures import Case
 from ..clustering import DenStream
 from ..visualization import cumulative_stream_drifts, feature_space
@@ -83,7 +83,9 @@ class CDESF:
         self.process_model_graph = nx.DiGraph()
         self.additional_attributes = additional_attributes
         self.n_features = len(additional_attributes) + 2
-        self.denstream = DenStream(lambda_, beta, epsilon, mu, stream_speed, self.n_features)
+        self.denstream = DenStream(
+            lambda_, beta, epsilon, mu, stream_speed, self.n_features
+        )
         self.cluster_metrics = []
         self.case_metrics = []
         self.active_core_clusters = set()
@@ -121,8 +123,10 @@ class CDESF:
         Initializes metrics in case the user triggers this task
         """
         for case in self.cases:
-            case.distances = extract_case_distances(
-                self.process_model_graph, case, self.additional_attributes
+            case.distances = calculate_case_distances(
+                self.process_model_graph,
+                case,
+                additional_attributes=self.additional_attributes,
             )
 
     def release_cases_from_memory(self) -> None:
@@ -314,8 +318,10 @@ class CDESF:
             self.initialize_cdesf()
             return
 
-        case.distances = extract_case_distances(
-            self.process_model_graph, case, self.additional_attributes
+        case.distances = calculate_case_distances(
+            self.process_model_graph,
+            case,
+            additional_attributes=self.additional_attributes,
         )
 
         # DenStream

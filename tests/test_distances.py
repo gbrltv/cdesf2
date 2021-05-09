@@ -1,11 +1,15 @@
 from datetime import datetime
 import networkx as nx
 from cdesf2.data_structures import Case
-from cdesf2.utils import initialize_graph, extract_case_distances
+from cdesf2.utils import (
+    calculate_case_distances,
+    calculate_case_time_distances,
+    initialize_graph,
+)
 import pytest
 
 
-class TestExtractCase:
+class TestCalculateCaseDistances:
     @pytest.fixture
     def simple_graph_with_attributes(self):
         case_list = []
@@ -95,7 +99,7 @@ class TestExtractCase:
 
         return graph
 
-    def test_extract_case_distances(self):
+    def test_calculate_case_distances(self):
         case_list = []
 
         case = Case("1")
@@ -381,11 +385,11 @@ class TestExtractCase:
             }
         )
 
-        distances = extract_case_distances(graph, case)
+        distances = calculate_case_distances(graph, case)
         assert distances.get("graph") == pytest.approx(0.05)
         assert distances.get("time") == pytest.approx(-1.42, rel=1e-2)
 
-    def test_extract_case_distances_with_attributes(
+    def test_calculate_case_distances_with_attributes(
         self,
         simple_graph_with_attributes: nx.DiGraph,
     ):
@@ -415,8 +419,49 @@ class TestExtractCase:
             }
         )
 
-        distances = extract_case_distances(
-            simple_graph_with_attributes, case, ["attribute_one", "attribute_two"]
+        distances = calculate_case_distances(
+            simple_graph_with_attributes,
+            case,
+            additional_attributes=["attribute_one", "attribute_two"],
         )
         assert distances.get("attribute_one") == pytest.approx(0.4121, rel=1e-2)
         assert distances.get("attribute_two") == pytest.approx(0.2651, rel=1e-2)
+
+
+class TestCalculateTimestampDistances:
+    def test_calculate_empty_distances(self):
+        empty_case = Case("Empty case")
+
+        assert calculate_case_time_distances(empty_case) == [0]
+
+        single_event_case = Case("Single event case")
+        single_event_case.add_event(
+            {"concept:name": "", "time:timestamp": datetime(2015, 5, 10, 8, 30, 30)}
+        )
+
+        assert calculate_case_time_distances(single_event_case) == [0]
+
+    def test_calculate_actual_distances(self):
+        case_one = Case("Case 1")
+        case_one.add_event(
+            {"concept:name": "", "time:timestamp": datetime(2015, 5, 10, 8, 30, 30)}
+        )
+        case_one.add_event(
+            {"concept:name": "", "time:timestamp": datetime(2015, 5, 10, 8, 45, 30)}
+        )
+        case_one.add_event(
+            {"concept:name": "", "time:timestamp": datetime(2015, 5, 10, 8, 50, 30)}
+        )
+        case_one.add_event(
+            {"concept:name": "", "time:timestamp": datetime(2015, 5, 10, 8, 53, 30)}
+        )
+        case_one.add_event(
+            {"concept:name": "", "time:timestamp": datetime(2015, 5, 10, 8, 59, 30)}
+        )
+        case_one.add_event(
+            {"concept:name": "", "time:timestamp": datetime(2015, 5, 10, 9, 1, 30)}
+        )
+
+        expected_distances = [900, 300, 180, 360, 120]
+
+        assert calculate_case_time_distances(case_one) == expected_distances

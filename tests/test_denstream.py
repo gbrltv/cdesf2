@@ -2,7 +2,7 @@ from cdesf2.clustering import DenStream, NoMicroClusterException
 from cdesf2.data_structures import MicroCluster
 from cdesf2.data_structures import Cluster
 from cdesf2.data_structures import Case
-from cdesf2.utils import extract_case_distances, initialize_graph
+from cdesf2.utils import calculate_case_distances, initialize_graph
 from math import log10
 import networkx as nx
 from datetime import datetime
@@ -120,9 +120,10 @@ class TestDenstream:
         assert denstream.time == 0
         assert denstream.all_cases == {}
 
-    def test_no_value(self):
-        with pytest.raises(Exception):
-            assert DenStream()
+    # This is a compile-time error.
+    # def test_no_value(self):
+    #     with pytest.raises(Exception):
+    #         assert DenStream()
 
     def test_euclidean_distance(self):
         point_1 = np.array([0, 0])
@@ -261,7 +262,7 @@ class TestDenstream:
             }
         )
 
-        case_3.distances = extract_case_distances(graph, case_3)
+        case_3.distances = calculate_case_distances(graph, case_3)
 
         micro_cluster = MicroCluster(10, 2, 0, 0.15)
         micro_cluster.cf1 = np.array([0.5, -0.5])
@@ -339,7 +340,7 @@ class TestDenstream:
     def test_dbscan(self, denstream: DenStream, cases_list):
         graph = initialize_graph(cases_list)
         for case in cases_list:
-            case.distances = extract_case_distances(graph, case)
+            case.distances = calculate_case_distances(graph, case)
 
         denstream.dbscan(cases_list)
         assert len(denstream.p_micro_clusters) == 1
@@ -461,7 +462,7 @@ class TestDenstream:
 
         pmg = initialize_graph(cases_list)
         for case in cases_list:
-            case.distances = extract_case_distances(pmg, case)
+            case.distances = calculate_case_distances(pmg, case)
 
         denstream.dbscan(cases_list)
 
@@ -584,7 +585,7 @@ class TestDenstream:
             }
         )
 
-        case.distances = extract_case_distances(pmg, case)
+        case.distances = calculate_case_distances(pmg, case)
         cases_list.insert(0, case)
 
         denstream.train(cases_list[0])
@@ -654,7 +655,7 @@ class TestDenstream:
             CF = np.array([0.75, 0]) * (2 ** (-0.15))
             CF2 = np.array([0.125, 0]) * (2 ** (-0.15))
             weight = 6 * (2 ** (-0.15))
-            for x in range(i + 1):
+            for _ in range(i + 1):
                 CF *= 2 ** (-0.15)
                 CF2 *= 2 ** (-0.15)
                 weight *= 2 ** (-0.15)
@@ -668,7 +669,7 @@ class TestDenstream:
                 2 ** (-0.15)
             )
             weight_1 = (1 + 1) * (2 ** (-0.15))
-            for x in range(i + 1):
+            for _ in range(i + 1):
                 CF_1 += cases_list[0].point
                 CF_1 *= 2 ** (-0.15)
                 CF2_1 += cases_list[0].point * cases_list[0].point
@@ -700,7 +701,7 @@ class TestDenstream:
                 "time:timestamp": datetime(2015, 5, 10, 8, 1, 00),
             }
         )
-        case.distances = extract_case_distances(pmg, case)
+        case.distances = calculate_case_distances(pmg, case)
         cases_list.insert(0, case)
         assert cases_list[0].id == "7"
 

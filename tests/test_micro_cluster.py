@@ -1,6 +1,6 @@
 from cdesf2.data_structures import MicroCluster
 from cdesf2.data_structures import Case
-from cdesf2.utils import initialize_graph, extract_case_distances
+from cdesf2.utils import initialize_graph, calculate_case_distances
 from datetime import datetime
 from math import sqrt
 import networkx as nx
@@ -21,9 +21,10 @@ def test_initial_value():
     assert micro_cluster.lambda_ == 0.15
 
 
-def test_no_value():
-    with pytest.raises(Exception):
-        assert MicroCluster()
+# This is a compile-time error.
+# def test_no_value():
+#     with pytest.raises(Exception):
+#         assert MicroCluster()
 
 
 def test_centroid():
@@ -163,7 +164,7 @@ def test_update():
             "time:timestamp": datetime(2015, 5, 10, 8, 13, 00),
         }
     )
-    case.distances = extract_case_distances(graph, case)
+    case.distances = calculate_case_distances(graph, case)
 
     cf = micro_cluster.cf1.copy()
     cf2 = micro_cluster.cf2.copy()
@@ -175,7 +176,7 @@ def test_update():
     assert micro_cluster.weight == weight + 1
 
     case = case_list[0]
-    case.distances = extract_case_distances(graph, case)
+    case.distances = calculate_case_distances(graph, case)
     cf = micro_cluster.cf1.copy()
     cf2 = micro_cluster.cf2.copy()
     weight = micro_cluster.weight

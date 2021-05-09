@@ -2,13 +2,12 @@ from datetime import datetime
 from os import path
 
 import networkx as nx
-import numpy as np
 import pytest
 from cdesf2.clustering import DenStream
 from cdesf2.core import CDESF
 from cdesf2.data_structures import Case
 from cdesf2.utils import (
-    extract_case_distances,
+    calculate_case_distances,
     initialize_graph,
     normalize_graph,
     read_csv,
@@ -166,20 +165,20 @@ class TestCdesf:
         case_3 = process.cases[0]
 
         # Verify that the distances are applied.
-        distances_for_case_3 = extract_case_distances(
+        distances_for_case_3 = calculate_case_distances(
             process.process_model_graph, case_3
         )
         assert case_3.distances["graph"] == distances_for_case_3["graph"]
         assert case_3.distances["time"] == distances_for_case_3["time"]
 
-        distances_for_case_2 = extract_case_distances(
+        distances_for_case_2 = calculate_case_distances(
             process.process_model_graph, case_2
         )
         case_2 = process.cases[1]
         assert case_2.distances["graph"] == distances_for_case_2["graph"]
         assert case_2.distances["time"] == distances_for_case_2["time"]
 
-        distances_for_case_1 = extract_case_distances(
+        distances_for_case_1 = calculate_case_distances(
             process.process_model_graph, case_1
         )
         case_1 = process.cases[2]
@@ -297,12 +296,12 @@ class TestCdesf:
         process.process_model_graph = initialize_graph(process.cases)
         pmg = initialize_graph(cases_list)
         for case in cases_list:
-            case.distances = extract_case_distances(pmg, case)
+            case.distances = calculate_case_distances(pmg, case)
         case_4 = process.cases[0]
 
         process.initialize_cdesf()
 
-        distances_for_case_4 = extract_case_distances(pmg, case_4)
+        distances_for_case_4 = calculate_case_distances(pmg, case_4)
         assert case_4.distances["graph"] == distances_for_case_4["graph"]
         assert case_4.distances["time"] == distances_for_case_4["time"]
 
@@ -405,7 +404,7 @@ class TestCdesf:
         assert len(process.process_model_graph.edges) == 3
         assert len(process.process_model_graph.nodes) == 4
         check_point_graph = initialize_graph(process.cases)
-        for node1, node2, data in process.process_model_graph.edges.data():
+        for node1, node2, _ in process.process_model_graph.edges.data():
             assert (
                 process.process_model_graph[node1][node2]
                 == check_point_graph[node1][node2]
@@ -446,7 +445,7 @@ class TestCdesf:
         assert pmg["activityB"]["activityC"]
         assert pmg["activityC"]["activityD"]
         check_point_graph = initialize_graph(process.cases)
-        for node1, node2, data in process.process_model_graph.edges.data():
+        for node1, node2, _ in process.process_model_graph.edges.data():
             pmg[node1][node2]["weight"] *= 0.95
             pmg[node1][node2]["weight"] += check_point_graph[node1][node2]["weight"]
             pmg[node1][node2]["time"] += check_point_graph[node1][node2]["time"]
@@ -498,7 +497,7 @@ class TestCdesf:
         assert process.process_model_graph["activityB"]["activityC"]
         assert process.process_model_graph["activityC"]["activityD"]
         check_point_graph = initialize_graph(process.cases)
-        for node1, node2, data in process.process_model_graph.edges.data():
+        for node1, node2, _ in process.process_model_graph.edges.data():
             pmg[node1][node2]["weight"] *= 0.95
             pmg[node1][node2]["weight"] += check_point_graph[node1][node2]["weight"]
             pmg[node1][node2]["time"] += check_point_graph[node1][node2]["time"]
@@ -551,7 +550,7 @@ class TestCdesf:
         assert process.process_model_graph["activityB"]["activityC"]
         assert process.process_model_graph["activityC"]["activityD"]
         check_point_graph = initialize_graph(process.cases)
-        for node1, node2, data in process.process_model_graph.edges.data():
+        for node1, node2, _ in process.process_model_graph.edges.data():
             pmg[node1][node2]["weight"] *= 0.95
             pmg[node1][node2]["weight"] += check_point_graph[node1][node2]["weight"]
             pmg[node1][node2]["time"] += check_point_graph[node1][node2]["time"]

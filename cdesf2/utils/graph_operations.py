@@ -1,6 +1,6 @@
 import networkx as nx
 from ..data_structures.case import Case
-from ..utils import time_difference
+from .distances import calculate_case_time_distances
 
 
 def normalize_graph(graph: nx.DiGraph) -> nx.DiGraph:
@@ -42,8 +42,9 @@ def initialize_graph(
 
     Parameters
     --------------------------------------
-    case_list: list[Case],
+    case_list: list[Case]
         List of cases used to initialize the graph
+
     Returns
     --------------------------------------
     graph: nx.DiGraph,
@@ -53,9 +54,7 @@ def initialize_graph(
 
     for case in case_list:
         trace = case.get_trace()
-        timestamps = case.get_timestamps()
-        # TODO: Probably time_difference can be extended to accept one parameter.
-        times = time_difference([timestamps])[0]
+        time_differences = calculate_case_time_distances(case)
 
         # TODO: This code can be optimized heavily to not have this many for-loops.
         for index, activity in enumerate(trace):
@@ -77,10 +76,10 @@ def initialize_graph(
             edge = (trace[trace_index], trace[trace_index + 1])
 
             if edge not in graph.edges:
-                graph.add_edge(*edge, weight=1, time=times[trace_index])
+                graph.add_edge(*edge, weight=1, time=time_differences[trace_index])
             else:
                 graph[edge[0]][edge[1]]["weight"] += 1
-                graph[edge[0]][edge[1]]["time"] += times[trace_index]
+                graph[edge[0]][edge[1]]["time"] += time_differences[trace_index]
 
     return normalize_graph(graph)
 
