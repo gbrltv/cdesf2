@@ -57,7 +57,6 @@ def test_gen_plotting():
         epsilon=0.1,
         mu=4,
         stream_speed=1000,
-        n_features=2,
         gen_plot=True,
         gen_metrics=False,
     )

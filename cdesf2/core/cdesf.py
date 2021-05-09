@@ -31,7 +31,6 @@ class CDESF:
         epsilon: float = 0.2,
         mu: int = 4,
         stream_speed: int = 100,
-        n_features: int = 2,
         gen_plot: bool = False,
         gen_metrics: bool = True,
         additional_attributes: "list[str]" = [],
@@ -82,14 +81,15 @@ class CDESF:
         self.nyquist = 0
         self.check_point_cases = 0
         self.process_model_graph = nx.DiGraph()
-        self.denstream = DenStream(lambda_, beta, epsilon, mu, stream_speed, n_features)
+        self.additional_attributes = additional_attributes
+        self.n_features = len(additional_attributes) + 2
+        self.denstream = DenStream(lambda_, beta, epsilon, mu, stream_speed, self.n_features)
         self.cluster_metrics = []
         self.case_metrics = []
         self.active_core_clusters = set()
         self.drift_indexes = []
         self.metrics = Metrics(self.name, additional_attributes)
         self.feature_space_plot_path = f"output/visualization/{self.name}_feature_space"
-        self.additional_attributes = additional_attributes
 
         # Used to store the current feature_space jobs that are executing.
         self.fs_pool = mp.Pool(mp.cpu_count())
@@ -157,8 +157,9 @@ class CDESF:
         # gets calculated sequentially and not inside the pool.
         generated_o_clusters = self.denstream.generate_outlier_clusters()
 
-        # plot
-        if self.gen_plot:
+        # Plot
+        # Plotting is only available when no additional attributes are defined
+        if self.gen_plot and not len(self.additional_attributes):
             normals, outliers = [], []
             for case in self.cases:
                 if not np.isnan(np.sum(case.point)) and self.denstream.is_normal(

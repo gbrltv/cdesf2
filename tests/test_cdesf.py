@@ -27,7 +27,6 @@ class TestCdesf:
             epsilon=0.1,
             mu=4,
             stream_speed=1000,
-            n_features=2,
             gen_plot=False,
             gen_metrics=False,
         )

@@ -12,7 +12,6 @@ def test_pipeline():
         epsilon=0.6,
         mu=4,
         stream_speed=100,
-        n_features=2,
         gen_metrics=True,
         gen_plot=False,
     )
@@ -29,7 +28,6 @@ def test_attributed_pipeline():
         epsilon=0.6,
         mu=4,
         stream_speed=100,
-        n_features=2,
         gen_metrics=True,
         gen_plot=False,
         additional_attributes=["first", "second"],

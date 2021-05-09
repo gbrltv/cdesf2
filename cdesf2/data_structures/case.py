@@ -29,10 +29,10 @@ class Case:
 
     @property
     def point(self) -> np.ndarray:
-        graph_distance = self.distances.get("graph", np.nan)
-        time_distance = self.distances.get("time", np.nan)
+        if (len(self.distances) == 0):
+            return np.zeros(2)
 
-        return np.array([graph_distance, time_distance])
+        return np.array(list(self.distances.values()))
 
     @property
     def last_time(self) -> datetime:
