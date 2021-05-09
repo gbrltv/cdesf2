@@ -1,6 +1,5 @@
 from math import log10
 import networkx as nx
-from typing import Tuple
 from numpy import average
 from ..data_structures import Case
 from .time_difference import time_difference
@@ -9,130 +8,81 @@ from .time_difference import time_difference
 def extract_case_distances(
     graph: nx.DiGraph, case: Case, additional_attributes: "list[str]" = []
 ) -> "dict[str, float]":
+    """
+    Extracts the distances between the current graph and a given case across trace,
+    time, and the additional attributes provided.
+
+    Arguments:
+        graph: nx.DiGraph
+
+        case: Case
+
+        additional_attributes: list[str]:
+            A list of additional attributes to calculate the distances for.
+
+    Returns:
+        A dictionary that associates each attribute with the distance between the
+        graph and the case.
+    """
     trace = case.get_trace()
     timestamps = case.get_timestamps()
-    # timestamp_differences = time_difference([timestamps])[0]
+    timestamp_differences = time_difference([timestamps])[0]
 
-    # TODO: Clean up distance calculation
     if not graph.edges or len(trace) < 2:
-        pre_distances = {"graph": 0, "time": 0}
+        # Return a map with all-zero distances.
+        default_distances = { "graph": 0.0, "time": 0.0 }
 
         for attribute_name in additional_attributes:
-            pre_distances[attribute_name] = 0.0
+            default_distances[attribute_name] = 0.0
 
-        return pre_distances
+        return default_distances
 
-    graph_time = []
-    trace_weight = 0
-    for index in range(len(trace) - 1):
-        if (trace[index], trace[index + 1]) in graph.edges:
-            graph_time.append(graph[trace[index]][trace[index + 1]]["time_normalized"])
-            trace_weight += (
-                1 - graph[trace[index]][trace[index + 1]]["weight_normalized"]
-            )
-        else:
-            graph_time.append(0)
-            trace_weight += 1
+    distances: "dict[str, float]" = {}
 
-    lent = len(trace) - 1
-    if lent > 1:
-        # trace has more than one edge (transition), graph distance is the division of the sum by the number of edges
-        graph_distance = trace_weight / lent
-    else:
-        # trace has only one edge, graph distance is the sum
-        graph_distance = trace_weight
-
-    distances = {}
-    distances["graph"] = graph_distance
-
+    # Node distances
     for attribute_name in additional_attributes:
-        attribute_diffs = 0
-        total_avg = 0
+        current_total = 0
+        difference_total = 0
 
         for index, activity in enumerate(trace):
-            # Take the current from the graph node's attributes
-            current_values = graph.nodes[activity][attribute_name]
-            total_avg += average(current_values)
-            attribute_diffs += abs(
-                average(current_values) - case.get_attribute(attribute_name)[index]
-            )
+            activity_attribute_values = graph.nodes[activity][attribute_name]
+            activity_attribute_average = average(activity_attribute_values)
+            current_total += activity_attribute_average
 
-        distances[attribute_name] = attribute_diffs / total_avg
+            case_value = case.get_attribute(attribute_name)[index]
+            difference_total += abs(activity_attribute_average - case_value)
 
-    difference = 0
-    time = time_difference([case.get_timestamps()])[0]
-    for i in range(len(graph_time)):
-        difference += abs(graph_time[i] - time[i])
+        distances[attribute_name] = difference_total / current_total
 
-    graph_time_sum = sum(graph_time)
+    # Edge distances
+    normalized_times: "list[float]" = []
+    normalized_weight = 0
 
-    if difference == 0:
-        # trace and graph have the exact same time distribution
-        time_distance = 0
-    elif graph_time_sum == 0:
-        # graph time sum is 0, returns the log of the difference
-        time_distance = log10(difference)
+    for trace_index in range(len(trace) - 1):
+        first_node = trace[trace_index]
+        second_node = trace[trace_index + 1]
+
+        if graph.has_edge(first_node, second_node):
+            edge = graph[first_node][second_node]
+            normalized_times.append(edge["time_normalized"])
+            normalized_weight += (1 - edge["weight_normalized"])
+        else:
+            normalized_times.append(0.0)
+            normalized_weight += 1
+
+    distances["graph"] = normalized_weight / (len(trace) - 1)
+
+    time_current_total = sum(normalized_times)
+    time_difference_total = 0
+
+    for time_index, normalized_time in enumerate(normalized_times):
+        time_difference_total += abs(normalized_time - timestamp_differences[time_index])
+
+    if time_difference_total == 0:
+        distances["time"] = 0.0
+    elif time_current_total == 0:
+        distances["time"] = log10(time_difference_total)
     else:
-        # graph time sum and difference are not zero, original equation performed (most likely)
-        time_distance = log10(difference / graph_time_sum)
-
-    distances["time"] = time_distance
+        distances["time"] = log10(time_difference_total / time_current_total)
 
     return distances
-
-
-# def OLD_extract_case_distances(graph: nx.DiGraph, case: Case) -> Tuple[float, float]:
-#     """
-#     Receives a graph and a case and computes the metrics for that case.
-#     Contains several rules for graph and time distances.
-
-#     Parameters
-#     --------------------------------------
-#     graph: nx.DiGraph,
-#         Process model graph
-#     case: Case,
-#         Case to compute the metrics
-#     Returns
-#     --------------------------------------
-#     graph_distance, time_distance: Tuple[float, float]
-#         Graph and time distances
-#     """
-#     trace = case.get_trace()
-#     time = time_difference([case.get_timestamps()])[0]
-
-#     if len(graph.edges) == 0 or len(trace) <= 1:
-#         return 0, 0
-
-#     # accumulates initial trace weight and graph times
-#     graph_time = []
-#     trace_weight = 0
-#     for i in range(len(trace) - 1):
-#         if (trace[i], trace[i + 1]) in graph.edges:
-#             graph_time.append(graph[trace[i]][trace[i + 1]]["time_normalized"])
-#             trace_weight += 1 - graph[trace[i]][trace[i + 1]]["weight_normalized"]
-#         else:
-#             graph_time.append(0)
-#             trace_weight += 1
-
-#     lent = len(trace) - 1
-#     if lent > 1:
-#         # trace has more than one edge (transition), graph distance is the division of the sum by the number of edges
-#         graph_distance = trace_weight / lent
-#     else:
-#         # trace has only one edge, graph distance is the sum
-#         graph_distance = trace_weight
-
-#     difference = 0
-#     for i in range(len(time)):
-#         difference += abs(graph_time[i] - time[i])
-#     if difference == 0:
-#         # trace and graph have the exact same time distribution
-#         return graph_distance, 0
-
-#     graph_time_sum = sum(graph_time)
-#     if graph_time_sum == 0:
-#         # graph time sum is 0, returns the log of the difference
-#         return graph_distance, log10(difference)
-#     else:
-#         # graph time sum and difference are not zero, original equation performed (most likely)
-#         return graph_distance, log10(difference / graph_time_sum)
