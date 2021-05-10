@@ -21,6 +21,7 @@ class TestCalculateCaseDistances:
                 "time:timestamp": datetime(2015, 5, 10, 8, 00, 00),
                 "attribute_one": 10,
                 "attribute_two": 5,
+                "color": "red",
             }
         )
         case.add_event(
@@ -29,6 +30,7 @@ class TestCalculateCaseDistances:
                 "time:timestamp": datetime(2015, 5, 10, 8, 00, 10),
                 "attribute_one": 0,
                 "attribute_two": 7,
+                "color": "green",
             }
         )
         case.add_event(
@@ -37,6 +39,7 @@ class TestCalculateCaseDistances:
                 "time:timestamp": datetime(2015, 5, 10, 8, 00, 20),
                 "attribute_one": 2,
                 "attribute_two": 4,
+                "color": "green",
             }
         )
         case_list.append(case)
@@ -48,6 +51,7 @@ class TestCalculateCaseDistances:
                 "time:timestamp": datetime(2015, 5, 10, 8, 00, 00),
                 "attribute_one": 3,
                 "attribute_two": 10,
+                "color": "blue",
             }
         )
         case.add_event(
@@ -56,6 +60,7 @@ class TestCalculateCaseDistances:
                 "time:timestamp": datetime(2015, 5, 10, 8, 00, 10),
                 "attribute_one": 6,
                 "attribute_two": 2,
+                "color": "green",
             }
         )
         case_list.append(case)
@@ -67,6 +72,7 @@ class TestCalculateCaseDistances:
                 "time:timestamp": datetime(2015, 5, 10, 8, 00, 00),
                 "attribute_one": 8,
                 "attribute_two": 4,
+                "color": "red",
             }
         )
         case.add_event(
@@ -75,6 +81,7 @@ class TestCalculateCaseDistances:
                 "time:timestamp": datetime(2015, 5, 10, 8, 00, 10),
                 "attribute_one": 1,
                 "attribute_two": 12,
+                "color": "blue",
             }
         )
         case.add_event(
@@ -83,6 +90,7 @@ class TestCalculateCaseDistances:
                 "time:timestamp": datetime(2015, 5, 10, 8, 00, 20),
                 "attribute_one": 2,
                 "attribute_two": 2,
+                "color": "blue",
             }
         )
         case.add_event(
@@ -91,11 +99,12 @@ class TestCalculateCaseDistances:
                 "time:timestamp": datetime(2015, 5, 10, 8, 00, 30),
                 "attribute_one": 1,
                 "attribute_two": 1,
+                "color": "blue",
             }
         )
         case_list.append(case)
 
-        graph = initialize_graph(case_list, ["attribute_one", "attribute_two"])
+        graph = initialize_graph(case_list, ["attribute_one", "attribute_two", "color"])
 
         return graph
 
@@ -400,6 +409,7 @@ class TestCalculateCaseDistances:
                 "time:timestamp": datetime(2015, 5, 10, 8, 00, 00),
                 "attribute_one": 9,
                 "attribute_two": 6,
+                "color": "red",
             }
         )
         case.add_event(
@@ -408,6 +418,7 @@ class TestCalculateCaseDistances:
                 "time:timestamp": datetime(2015, 5, 10, 9, 18, 20),
                 "attribute_one": 5,
                 "attribute_two": 10,
+                "color": "red",
             }
         )
         case.add_event(
@@ -416,16 +427,18 @@ class TestCalculateCaseDistances:
                 "time:timestamp": datetime(2015, 5, 10, 10, 8, 20),
                 "attribute_one": 2,
                 "attribute_two": 2,
+                "color": "green",
             }
         )
 
         distances = calculate_case_distances(
             simple_graph_with_attributes,
             case,
-            additional_attributes=["attribute_one", "attribute_two"],
+            additional_attributes=["attribute_one", "attribute_two", "color"],
         )
         assert distances.get("attribute_one") == pytest.approx(0.4121, rel=1e-2)
         assert distances.get("attribute_two") == pytest.approx(0.2651, rel=1e-2)
+        assert distances.get("color") == pytest.approx(0.6111, rel=1e-2)
 
 
 class TestCalculateTimestampDistances:

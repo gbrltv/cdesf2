@@ -30,6 +30,6 @@ def test_attributed_pipeline():
         stream_speed=100,
         gen_metrics=True,
         gen_plot=False,
-        additional_attributes=["first", "second"],
+        additional_attributes=["first", "second", "country"],
     )
     cdesf.run(event_stream_test)

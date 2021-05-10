@@ -1,5 +1,6 @@
 import networkx as nx
-from numpy import average
+import collections
+from numpy import average, count_nonzero
 from math import log10
 from ..data_structures import Case
 
@@ -39,18 +40,41 @@ def calculate_case_distances(
 
     # Node distances
     for attribute_name in additional_attributes:
+        is_numerical = True
         current_total = 0
         difference_total = 0
 
         for index, activity in enumerate(trace):
-            activity_attribute_values = graph.nodes[activity][attribute_name]
-            activity_attribute_average = average(activity_attribute_values)
-            current_total += activity_attribute_average
-
             case_value = case.get_attribute(attribute_name)[index]
-            difference_total += abs(activity_attribute_average - case_value)
 
-        distances[attribute_name] = difference_total / current_total
+            activity_attribute_values = graph.nodes[activity][attribute_name]
+
+            if isinstance(activity_attribute_values[0], str):
+                # Handle this attribute like a categorical attribute
+                is_numerical = False
+                activity_attribute_counter = collections.Counter(
+                    activity_attribute_values
+                )
+                activity_attribute_frequency = activity_attribute_counter.get(
+                    case_value, 0
+                )
+                activity_attribute_distance = 1 - (
+                    activity_attribute_frequency / len(activity_attribute_values)
+                )
+
+                current_total += activity_attribute_distance
+            else:
+                # Handle this attribute like a numerical attribute
+                is_numerical = True
+                activity_attribute_average = average(activity_attribute_values)
+                current_total += activity_attribute_average
+
+                difference_total += abs(activity_attribute_average - case_value)
+
+        if is_numerical:
+            distances[attribute_name] = difference_total / current_total
+        else:
+            distances[attribute_name] = current_total / len(trace)
 
     # Edge distances
     normalized_times: "list[float]" = []
