@@ -2,12 +2,12 @@ import pandas as pd
 import numpy as np
 from pm4py.objects.conversion.log import converter as log_converter
 from pm4py.util import constants
-from pm4py.objects.log import log
+from pm4py.objects.log import obj
 from pm4py.objects.log.util import dataframe_utils
 from pm4py.objects.log.importer.xes import importer as xes_importer
 
 
-def read_csv(path: str) -> log.EventStream:
+def read_csv(path: str) -> obj.EventStream:
     """
     Reads the .csv file, extracts the events and preprocesses data for CDESF.
 
@@ -40,12 +40,13 @@ def read_csv(path: str) -> log.EventStream:
     )
 
     event_stream = log_converter.apply(
-        log_csv, variant=log_converter.Variants.TO_EVENT_STREAM)
+        log_csv, variant=log_converter.Variants.TO_EVENT_STREAM
+    )
 
     return event_stream
 
 
-def read_xes(path: str) -> log.EventStream:
+def read_xes(path: str) -> obj.EventStream:
     """
     Reads the .xes file, extracts the events and preprocesses data for CDESF.
 

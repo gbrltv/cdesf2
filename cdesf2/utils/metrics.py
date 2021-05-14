@@ -14,7 +14,10 @@ class Metrics:
     and writes the results into files periodically (check points)
     """
 
-    def __init__(self, file_name: str):
+    columns: "list[str]"
+    additional_attributes: "list[str]"
+
+    def __init__(self, file_name: str, additional_attributes: "list[str]" = []):
         """
         Creates the paths for the outputs and initializes the metrics attributes
 
@@ -26,12 +29,13 @@ class Metrics:
         self.case_metrics = []
         self.cluster_metrics = []
         self.file_name = file_name
+        self.additional_attributes = additional_attributes
 
-        self.path_to_pmg_metrics = f'output/metrics/{file_name}_process_model_graphs'
-        self.path_to_pmg_vis = f'output/visualization/{file_name}_process_model_graphs'
-        self.path_to_drifts = 'output/visualization/drifts'
-        self.path_to_case_metrics = 'output/metrics/case_metrics'
-        self.path_to_cluster_metrics = 'output/metrics/cluster_metrics'
+        self.path_to_pmg_metrics = f"output/metrics/{file_name}_process_model_graphs"
+        self.path_to_pmg_vis = f"output/visualization/{file_name}_process_model_graphs"
+        self.path_to_drifts = "output/visualization/drifts"
+        self.path_to_case_metrics = "output/metrics/case_metrics"
+        self.path_to_cluster_metrics = "output/metrics/cluster_metrics"
         try:
             makedirs(self.path_to_pmg_metrics, exist_ok=True)
             makedirs(self.path_to_pmg_vis, exist_ok=True)
@@ -39,16 +43,46 @@ class Metrics:
             makedirs(self.path_to_case_metrics, exist_ok=True)
             makedirs(self.path_to_cluster_metrics, exist_ok=True)
 
-            pd.DataFrame(columns=['stream_index', 'timestamp', 'check point', 'case',
-                                  'graph distance', 'time distance', 'label']) \
-                .to_csv(f'{self.path_to_case_metrics}/{file_name}.csv', index=False)
-            pd.DataFrame(columns=['stream_index', 'timestamp', 'check point', 'cluster id',
-                                  'x', 'y', 'radius', 'weight', 'cluster type']) \
-                .to_csv(f'{self.path_to_cluster_metrics}/{file_name}.csv', index=False)
+            self.columns = [
+                "stream_index",
+                "timestamp",
+                "check point",
+                "case",
+                "graph distance",
+                "time distance",
+                "label",
+            ]
+
+            for attribute_name in additional_attributes:
+                self.columns.append(attribute_name)
+
+            pd.DataFrame(columns=self.columns).to_csv(
+                f"{self.path_to_case_metrics}/{file_name}.csv", index=False
+            )
+            pd.DataFrame(
+                columns=[
+                    "stream_index",
+                    "timestamp",
+                    "check point",
+                    "cluster id",
+                    "x",
+                    "y",
+                    "radius",
+                    "weight",
+                    "cluster type",
+                ]
+            ).to_csv(f"{self.path_to_cluster_metrics}/{file_name}.csv", index=False)
         except Exception as e:
             print(e)
 
-    def compute_case_metrics(self, event_index: int, timestamp: datetime, cp_count: int, case: Case, label: bool) -> None:
+    def compute_case_metrics(
+        self,
+        event_index: int,
+        timestamp: datetime,
+        cp_count: int,
+        case: Case,
+        label: bool,
+    ) -> None:
         """
         Generates case metrics and saves them in the self.case_metrics attribute.
 
@@ -65,35 +99,69 @@ class Metrics:
         label: bool
             Controls if case is normal or anomalous
         """
-        label_str = 'anomalous'
+        label_str = "anomalous"
         if label:
-            label_str = 'normal'
+            label_str = "normal"
 
-        self.case_metrics.append([event_index, timestamp, cp_count, case.id,
-                                  case.graph_distance, case.time_distance, label_str])
+        data = [
+            event_index,
+            timestamp,
+            cp_count,
+            case.id,
+            case.distances.get("graph"),
+            case.distances.get("time"),
+            label_str,
+        ]
+
+        for attribute_name in self.additional_attributes:
+            data.append(case.distances.get(attribute_name))
+
+        self.case_metrics.append(data)
 
     def save_case_metrics_on_check_point(self) -> None:
         """
         Saves the case metrics into a file according to a set path and name.
         Also releases the case_metrics attribute
         """
-        cm_path = f'{self.path_to_case_metrics}/{self.file_name}.csv'
-        columns = ['stream_index', 'timestamp', 'check point',
-                   'case', 'graph distance', 'time distance', 'label']
-        pd.read_csv(cm_path).append(pd.DataFrame(self.case_metrics,
-                                                 columns=columns)).to_csv(cm_path, index=False)
+        cm_path = f"{self.path_to_case_metrics}/{self.file_name}.csv"
+        pd.read_csv(cm_path).append(
+            pd.DataFrame(self.case_metrics, columns=self.columns)
+        ).to_csv(cm_path, index=False)
         self.case_metrics.clear()
 
-    def compute_cluster_metrics_helper(self, event_index: int, timestamp: datetime, cp_count: int,
-                                       cluster: Cluster, cluster_type: str) -> None:
+    def compute_cluster_metrics_helper(
+        self,
+        event_index: int,
+        timestamp: datetime,
+        cp_count: int,
+        cluster: Cluster,
+        cluster_type: str,
+    ) -> None:
         """
         Helper function to save metrics into cluster_metrics attribute.
         """
-        self.cluster_metrics.append([event_index, timestamp, cp_count, cluster.id, cluster.centroid[0],
-                                     cluster.centroid[1], cluster.radius, cluster.weight, cluster_type])
+        self.cluster_metrics.append(
+            [
+                event_index,
+                timestamp,
+                cp_count,
+                cluster.id,
+                cluster.centroid[0],
+                cluster.centroid[1],
+                cluster.radius,
+                cluster.weight,
+                cluster_type,
+            ]
+        )
 
-    def compute_cluster_metrics(self, event_index: int, timestamp: datetime, cp_count: int,
-                                normal_clusters: Tuple[List[List], List[List]], o_clusters: List[Cluster]) -> None:
+    def compute_cluster_metrics(
+        self,
+        event_index: int,
+        timestamp: datetime,
+        cp_count: int,
+        normal_clusters: Tuple[List[List], List[List]],
+        o_clusters: List[Cluster],
+    ) -> None:
         """
         Generates cluster metrics and saves them in the self._cluster_metrics attribute.
 
@@ -113,28 +181,46 @@ class Metrics:
         c_clusters, p_clusters = normal_clusters[0], normal_clusters[1]
         for group in c_clusters:
             for cluster in group:
-                self.compute_cluster_metrics_helper(event_index, timestamp, cp_count, cluster, 'core micro-cluster')
+                self.compute_cluster_metrics_helper(
+                    event_index, timestamp, cp_count, cluster, "core micro-cluster"
+                )
 
         for group in p_clusters:
             for cluster in group:
-                self.compute_cluster_metrics_helper(event_index, timestamp, cp_count, cluster, 'potential micro-cluster')
+                self.compute_cluster_metrics_helper(
+                    event_index, timestamp, cp_count, cluster, "potential micro-cluster"
+                )
 
         for cluster in o_clusters:
-            self.compute_cluster_metrics_helper(event_index, timestamp, cp_count, cluster, 'outlier micro-cluster')
+            self.compute_cluster_metrics_helper(
+                event_index, timestamp, cp_count, cluster, "outlier micro-cluster"
+            )
 
     def save_cluster_metrics_on_check_point(self) -> None:
         """
         Saves the cluster metrics into a file according to a set path and name.
         Also releases the cluster_metrics attribute
         """
-        cm_path = f'{self.path_to_cluster_metrics}/{self.file_name}.csv'
-        columns = ['stream_index', 'timestamp', 'check point', 'cluster id',
-                   'x', 'y', 'radius', 'weight', 'cluster type']
-        pd.read_csv(cm_path).append(pd.DataFrame(
-            self.cluster_metrics, columns=columns)).to_csv(cm_path, index=False)
+        cm_path = f"{self.path_to_cluster_metrics}/{self.file_name}.csv"
+        columns = [
+            "stream_index",
+            "timestamp",
+            "check point",
+            "cluster id",
+            "x",
+            "y",
+            "radius",
+            "weight",
+            "cluster type",
+        ]
+        pd.read_csv(cm_path).append(
+            pd.DataFrame(self.cluster_metrics, columns=columns)
+        ).to_csv(cm_path, index=False)
         self.cluster_metrics.clear()
 
-    def save_pmg_on_check_point(self, process_model_graph: nx.DiGraph, cp_count: int) -> None:
+    def save_pmg_on_check_point(
+        self, process_model_graph: nx.DiGraph, cp_count: int
+    ) -> None:
         """
         Saves the Process Model Graph at all check points in a JSON file and plots
 
@@ -146,9 +232,18 @@ class Metrics:
             Current check point
         """
         try:
-            with open(f'{self.path_to_pmg_metrics}/process_model_graph_{cp_count}.json', 'w') as file:
-                file.write(json.dumps(nx.readwrite.json_graph.node_link_data(process_model_graph)))
+            with open(
+                f"{self.path_to_pmg_metrics}/process_model_graph_{cp_count}.json", "w"
+            ) as file:
+                file.write(
+                    json.dumps(
+                        nx.readwrite.json_graph.node_link_data(process_model_graph)
+                    )
+                )
 
-            save_graphviz(process_model_graph, f'{self.path_to_pmg_vis}/process_model_graph_{cp_count}')
+            save_graphviz(
+                process_model_graph,
+                f"{self.path_to_pmg_vis}/process_model_graph_{cp_count}",
+            )
         except Exception as e:
             print(e)
