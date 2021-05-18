@@ -47,9 +47,23 @@ def calculate_case_distances(
         for index, activity in enumerate(trace):
             case_value = case.get_attribute(attribute_name)[index]
 
-            activity_attribute_values = graph.nodes[activity][attribute_name]
+            activity_node: dict = graph.nodes.get(activity)
 
-            if isinstance(activity_attribute_values[0], str):
+            if not activity_node:
+                # This is the first time we see this activity, so the distance is maximum.
+                # This might be the first ever event for this attribute, so we also need to check to see if it is
+                # numerical or categorical
+                if isinstance(case_value, str):
+                    current_total += 1
+                else:
+                    current_total += 0  # The average for this attribute so far should remain the same
+                    difference_total += case_value  # The distance should be maximum
+
+                continue
+
+            activity_attribute_values = activity_node.get(attribute_name)
+
+            if isinstance(case_value, str):
                 # Handle this attribute like a categorical attribute
                 is_numerical = False
                 activity_attribute_counter = collections.Counter(

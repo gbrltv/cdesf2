@@ -29,7 +29,7 @@ class Case:
 
     @property
     def point(self) -> np.ndarray:
-        if (len(self.distances) == 0):
+        if len(self.distances) == 0:
             return np.zeros(2)
 
         return np.array(list(self.distances.values()))

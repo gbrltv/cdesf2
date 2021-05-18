@@ -14,7 +14,8 @@ class Metrics:
     and writes the results into files periodically (check points)
     """
 
-    columns: "list[str]"
+    case_columns: "list[str]"
+    cluster_columns: "list[str]"
     additional_attributes: "list[str]"
 
     def __init__(self, file_name: str, additional_attributes: "list[str]" = []):
@@ -43,39 +44,50 @@ class Metrics:
             makedirs(self.path_to_case_metrics, exist_ok=True)
             makedirs(self.path_to_cluster_metrics, exist_ok=True)
 
-            self.columns = [
-                "stream_index",
-                "timestamp",
-                "check point",
-                "case",
-                "graph distance",
-                "time distance",
-            ]
+            self.case_columns, self.cluster_columns = self.generate_column_names()
 
-            for attribute_name in additional_attributes:
-                self.columns.append(f"{attribute_name} distance")
-
-            # `label` is always the last column
-            self.columns.append("label")
-
-            pd.DataFrame(columns=self.columns).to_csv(
+            pd.DataFrame(columns=self.case_columns).to_csv(
                 f"{self.path_to_case_metrics}/{file_name}.csv", index=False
             )
-            pd.DataFrame(
-                columns=[
-                    "stream_index",
-                    "timestamp",
-                    "check point",
-                    "cluster id",
-                    "x",
-                    "y",
-                    "radius",
-                    "weight",
-                    "cluster type",
-                ]
-            ).to_csv(f"{self.path_to_cluster_metrics}/{file_name}.csv", index=False)
+            pd.DataFrame(columns=self.cluster_columns).to_csv(
+                f"{self.path_to_cluster_metrics}/{file_name}.csv", index=False
+            )
         except Exception as e:
             print(e)
+
+    def generate_column_names(self) -> Tuple["list[str]", "list[str]"]:
+        case_columns = []
+        cluster_columns = []
+
+        case_columns += [
+            "stream_index",
+            "timestamp",
+            "check point",
+            "case",
+            "graph distance",
+            "time distance",
+        ]
+        case_columns += [
+            f"{attribute_name} distance"
+            for attribute_name in self.additional_attributes
+        ]
+        case_columns += ["label"]
+
+        cluster_columns += [
+            "stream_index",
+            "timestamp",
+            "check point",
+            "cluster id",
+            "graph coordinate",
+            "time coordinate",
+        ]
+        cluster_columns += [
+            f"{attribute_name} coordinate"
+            for attribute_name in self.additional_attributes
+        ]
+        cluster_columns += ["radius", "weight", "cluster type"]
+
+        return case_columns, cluster_columns
 
     def compute_case_metrics(
         self,
@@ -129,7 +141,7 @@ class Metrics:
         """
         cm_path = f"{self.path_to_case_metrics}/{self.file_name}.csv"
         pd.read_csv(cm_path).append(
-            pd.DataFrame(self.case_metrics, columns=self.columns)
+            pd.DataFrame(self.case_metrics, columns=self.case_columns)
         ).to_csv(cm_path, index=False)
         self.case_metrics.clear()
 
@@ -144,19 +156,23 @@ class Metrics:
         """
         Helper function to save metrics into cluster_metrics attribute.
         """
-        self.cluster_metrics.append(
-            [
-                event_index,
-                timestamp,
-                cp_count,
-                cluster.id,
-                cluster.centroid[0],
-                cluster.centroid[1],
-                cluster.radius,
-                cluster.weight,
-                cluster_type,
-            ]
-        )
+        data = [
+            event_index,
+            timestamp,
+            cp_count,
+            cluster.id,
+        ]
+
+        for dimension in cluster.centroid:
+            data.append(dimension)
+
+        data += [
+            cluster.radius,
+            cluster.weight,
+            cluster_type,
+        ]
+
+        self.cluster_metrics.append(data)
 
     def compute_cluster_metrics(
         self,
@@ -206,19 +222,8 @@ class Metrics:
         Also releases the cluster_metrics attribute
         """
         cm_path = f"{self.path_to_cluster_metrics}/{self.file_name}.csv"
-        columns = [
-            "stream_index",
-            "timestamp",
-            "check point",
-            "cluster id",
-            "x",
-            "y",
-            "radius",
-            "weight",
-            "cluster type",
-        ]
         pd.read_csv(cm_path).append(
-            pd.DataFrame(self.cluster_metrics, columns=columns)
+            pd.DataFrame(self.cluster_metrics, columns=self.cluster_columns)
         ).to_csv(cm_path, index=False)
         self.cluster_metrics.clear()
 

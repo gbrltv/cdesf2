@@ -313,9 +313,10 @@ class CDESF:
         current_time = case.last_time
         time_distance = (current_time - self.check_point).total_seconds()
 
-        if not self.initialized and time_distance > self.time_horizon:
-            self.check_point = current_time
-            self.initialize_cdesf()
+        if not self.initialized:
+            if time_distance > self.time_horizon:
+                self.check_point = current_time
+                self.initialize_cdesf()
             return
 
         case.distances = calculate_case_distances(
