@@ -50,11 +50,13 @@ class Metrics:
                 "case",
                 "graph distance",
                 "time distance",
-                "label",
             ]
 
             for attribute_name in additional_attributes:
-                self.columns.append(attribute_name)
+                self.columns.append(f"{attribute_name} distance")
+
+            # `label` is always the last column
+            self.columns.append("label")
 
             pd.DataFrame(columns=self.columns).to_csv(
                 f"{self.path_to_case_metrics}/{file_name}.csv", index=False
@@ -110,11 +112,13 @@ class Metrics:
             case.id,
             case.distances.get("graph"),
             case.distances.get("time"),
-            label_str,
         ]
 
         for attribute_name in self.additional_attributes:
             data.append(case.distances.get(attribute_name))
+
+        # `label` is always the last column
+        data.append(label_str)
 
         self.case_metrics.append(data)
 
