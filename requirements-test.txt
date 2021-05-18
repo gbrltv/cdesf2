@@ -1,0 +1,5 @@
+pytest==6.2.*
+pytest-cov==2.11.*
+coveralls==3.0.*
+validate_version_code==1.0.*
+codacy-coverage==1.3.*
