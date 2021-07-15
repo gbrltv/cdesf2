@@ -1,6 +1,6 @@
 import numpy as np
 from datetime import datetime
-from cdesf2.data_structures.case import Case
+from cdesf.data_structures.case import Case
 
 import pytest
 

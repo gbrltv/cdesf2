@@ -3,10 +3,10 @@ from os import path
 
 import networkx as nx
 import pytest
-from cdesf2.clustering import DenStream
-from cdesf2.core import CDESF
-from cdesf2.data_structures import Case
-from cdesf2.utils import (
+from cdesf.clustering import DenStream
+from cdesf.core import CDESF
+from cdesf.data_structures import Case
+from cdesf.utils import (
     calculate_case_distances,
     initialize_graph,
     normalize_graph,

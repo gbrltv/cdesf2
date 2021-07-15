@@ -1,5 +1,5 @@
-from cdesf2.utils import read_csv
-from cdesf2.core import CDESF
+from cdesf.utils import read_csv
+from cdesf.core import CDESF
 
 
 def test_pipeline():

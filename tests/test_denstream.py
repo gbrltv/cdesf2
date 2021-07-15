@@ -1,8 +1,8 @@
-from cdesf2.clustering import DenStream, NoMicroClusterException
-from cdesf2.data_structures import MicroCluster
-from cdesf2.data_structures import Cluster
-from cdesf2.data_structures import Case
-from cdesf2.utils import calculate_case_distances, initialize_graph
+from cdesf.clustering import DenStream, NoMicroClusterException
+from cdesf.data_structures import MicroCluster
+from cdesf.data_structures import Cluster
+from cdesf.data_structures import Case
+from cdesf.utils import calculate_case_distances, initialize_graph
 from math import log10
 import networkx as nx
 from datetime import datetime

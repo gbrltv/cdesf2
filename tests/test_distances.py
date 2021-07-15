@@ -1,7 +1,7 @@
 from datetime import datetime
 import networkx as nx
-from cdesf2.data_structures import Case
-from cdesf2.utils import (
+from cdesf.data_structures import Case
+from cdesf.utils import (
     calculate_case_distances,
     calculate_case_time_distances,
     initialize_graph,

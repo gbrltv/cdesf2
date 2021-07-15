@@ -1,6 +1,6 @@
-from cdesf2.data_structures import MicroCluster
-from cdesf2.data_structures import Case
-from cdesf2.utils import initialize_graph, calculate_case_distances
+from cdesf.data_structures import MicroCluster
+from cdesf.data_structures import Case
+from cdesf.utils import initialize_graph, calculate_case_distances
 from datetime import datetime
 from math import sqrt
 import networkx as nx

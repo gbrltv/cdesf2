@@ -1,4 +1,4 @@
-from cdesf2.data_structures.cluster import Cluster
+from cdesf.data_structures.cluster import Cluster
 import numpy as np
 import pytest
 

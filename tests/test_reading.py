@@ -4,7 +4,7 @@ from datetime import datetime, timezone, timedelta
 from pandas._libs.tslibs import Timestamp
 from pm4py.objects.log import obj
 
-from cdesf2.utils import read_csv, read_xes
+from cdesf.utils import read_csv, read_xes
 
 
 def test_read_csv():

@@ -1,11 +1,11 @@
-from cdesf2.core.cdesf import CDESF
-from cdesf2.utils.reading import read_csv
+from cdesf.core.cdesf import CDESF
+from cdesf.utils.reading import read_csv
 import shutil
 from os import path
 
 import networkx as nx
 import pytest
-from cdesf2.visualization import (cumulative_stream_drifts, save_graph,
+from cdesf.visualization import (cumulative_stream_drifts, save_graph,
                                   save_graphviz)
 
 

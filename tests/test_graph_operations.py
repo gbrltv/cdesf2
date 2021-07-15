@@ -1,8 +1,8 @@
 from datetime import datetime
 import networkx as nx
 import pytest
-from cdesf2.data_structures import Case
-from cdesf2.utils import initialize_graph, normalize_graph, merge_graphs
+from cdesf.data_structures import Case
+from cdesf.utils import initialize_graph, normalize_graph, merge_graphs
 
 
 class TestGraph:
