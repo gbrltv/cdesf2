@@ -3,12 +3,12 @@ from setuptools import setup, find_packages
 # TODO: Add more meta-data (keywords, classifiers...)
 setup(
   name="cdesf",
-  version="0.0.1",
+  version="0.0.2",
   description="Concept-drift on Event Stream Framework",
   url="https://github.com/gbrltv/cdesf2",
   author="Gabriel Marques Tavares",
   package_dir={'': 'cdesf'},
-  packages=find_packages(where="cdesf"),
+  packages=["."],
   install_requires=[
     "networkx==2.5",
     "numpy==1.20.*",
