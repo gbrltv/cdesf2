@@ -18,7 +18,7 @@ generate the output graphs.
 
 .. code:: console
 
-    $ sudo apt-get install graphviz graphviz-dev
+    sudo apt-get install graphviz graphviz-dev
 
 For more detailed installation instructions please refer to the 
 `installation guide <https://github.com/pygraphviz/pygraphviz/blob/main/INSTALL.txt>`__ on the `pygraphviz` repository.
