@@ -1,6 +1,6 @@
 CDESF: Concept-drift on Event Stream Framework
 =========================================================================================
-|github-ci| |pip| |downloads| |sonar_quality| |sonar_maintainability| |codacy|
+|github-ci| |pip| |downloads| |sonar_quality| |sonar_maintainability|
 |code_climate_maintainability|
 
 Latest version of CDESF framework
