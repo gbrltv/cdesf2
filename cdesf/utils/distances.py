@@ -114,13 +114,15 @@ def calculate_case_distances(
     for time_index, normalized_time in enumerate(normalized_times):
         time_difference_total += abs(normalized_time - time_differences[time_index])
 
-    if time_difference_total == 0:
+    try:
+        if time_difference_total == 0:
+            distances["time"] = 0.0
+        elif time_current_total == 0:
+            distances["time"] = log10(time_difference_total)
+        else:
+            distances["time"] = log10(time_difference_total / time_current_total)
+    except ValueError:
         distances["time"] = 0.0
-    elif time_current_total == 0:
-        distances["time"] = log10(time_difference_total)
-    else:
-        distances["time"] = log10(time_difference_total / time_current_total)
-
     return distances
 
 
